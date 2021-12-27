@@ -2,10 +2,10 @@ import { UTimer } from "../Utils";
 import { LogicConfig, SiteConfig } from "../../common/config";
 
 export class Setting {
-    static g_sClientName: String = "";
-    static g_sRMQHost: String = "";
-    static g_sRMQUser: String = "";
-    static g_sRMQPwd: String = "";
+    static g_sClientName: string = "";
+    static g_sRMQHost: string = "";
+    static g_sRMQUser: string = "";
+    static g_sRMQPwd: string = "";
     static g_nSleepCount: number = 0;
     static g_nSleepPeriod: number = 0;
     static g_lstLogicConfig: Array<LogicConfig> = [];

@@ -2,7 +2,7 @@ import { Logic } from "../Logics/Logic";
 
 export class LogicManager {
     static g_logics: { [key: string]: Logic } = {};
-    
+
     constructor() {
 
     }

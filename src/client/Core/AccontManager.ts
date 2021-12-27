@@ -1,9 +1,11 @@
 import { UTimer } from "../Utils";
 import { Site } from "../Sites/Site";
 import { Symbol } from "../Global/Symbol";
+import { Setting, TradeManager } from "./";
+import { access } from "fs";
 
 export class AccountManager {
-    static g_accounts: { [key: string]: Site } = {};
+    static g_accounts: Map<string, Site> = new Map<string, Site>();
     static g_lstSymbol: Array<Symbol>  = [];
     static g_timerAccountReport: UTimer;
     static g_timerSymbolReport: UTimer;
@@ -15,15 +17,60 @@ export class AccountManager {
     }
 
     static Prepare(): Boolean {
-        for (var key in this.g_accounts) delete this.g_accounts[key];
+        this.g_accounts.clear();
+        Setting.g_lstSiteConfig.forEach(siteConfig => {
+            this.g_accounts.set(siteConfig.account_id, Site.CreateSite(siteConfig));
+        });
+        let bRlt: Boolean = true;
+        this.g_accounts.forEach(account => {
+            if (bRlt && !account.R_Init()) {
+                TradeManager.PutLog(account.m_siteConfig.account_id + " R_Init() Failed");
+                bRlt = false;
+            }
+            if (bRlt && !account.R_Login()) {
+                TradeManager.PutLog(account.m_siteConfig.account_id + " R_Login() Failed");
+                bRlt = false;
+            }
+        });
 
-        return false;
+        // TODO: wait for rate to be valid
+        return bRlt;
     }
 
     static OnTick(): Boolean {
+        let bRlt: Boolean = true;
+        this.g_accounts.forEach(site => {
+            if (bRlt && !site.R_OnTick()) bRlt = false;
+        });
+        if (!bRlt) return false;
+
+        if (this.g_timerAccountReport.Check()) this.reportAccounts();
+        if (this.g_timerSymbolReport.Check()) this.reportSymbols();
         return false;
     }
 
     static Deinit(): void {
+    }
+
+    static reportAccounts(): void {
+        if (this.g_nLastReportedAccount >= this.g_accounts.size)
+        {
+            if (this.g_accounts.size < 1) return;
+            this.g_nLastReportedAccount %= this.g_accounts.size;
+        }
+        let account: Site | undefined = this.g_accounts.get(Array.from(this.g_accounts.keys())[this.g_nLastReportedAccount]);
+        // TODO: reportAccount(account)
+
+        this.g_nLastReportedAccount++;
+    }
+
+    static reportSymbols(): void {
+        if (this.g_nLastReportedSymbol >= this.g_lstSymbol.length)
+        {
+            if (this.g_lstSymbol.length < 1) return;
+            this.g_nLastReportedSymbol %= this.g_lstSymbol.length;
+        }
+        let symbol: Symbol = this.g_lstSymbol[this.g_nLastReportedSymbol];
+        // TODO: reportSymbol(symbol)
     }
 }
