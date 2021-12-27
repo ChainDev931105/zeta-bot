@@ -17,4 +17,14 @@ export class ServerCon {
     static OnTick(): void {
 
     }
+
+    static SendLog(sLog: string): void {
+        if (!this.g_bConnected) return;
+        // TODO: 
+    }
+
+    static SendInit(): void {
+        if (!this.g_bConnected) return;
+        // TODO: 
+    }
 }

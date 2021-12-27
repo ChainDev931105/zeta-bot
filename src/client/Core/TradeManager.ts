@@ -1,4 +1,4 @@
-import { AccountManager } from "./AccontManager";
+import { AccountManager } from "./AccountManager";
 import { LogicManager } from "./LogicManager";
 import { OrderManager } from "./OrderManager";
 import { ServerCon } from "./ServerCon";
@@ -6,11 +6,15 @@ import { Setting } from "./Setting";
 
 export class TradeManager {
     static g_bRunning: Boolean = true;
+    static OnLog: ((str:string) => void);
 
     constructor() {
     }
 
     static InitLog(onLog: ((x:string) => void)): void {// 'onLog' is callback function
+        this.OnLog = onLog;
+        // TODO: init log dir and file
+
     }
 
     static MainProcess(): void {
@@ -86,5 +90,6 @@ export class TradeManager {
     }
 
     static PutLog(sLog: string, bSendToServer: Boolean = true): void {
+        // TODO: 
     }
 }

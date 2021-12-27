@@ -1,7 +1,7 @@
 import { UTimer } from "../Utils";
 import { Site } from "../Sites/Site";
-import { Symbol } from "../Global/Symbol";
-import { Setting, TradeManager } from "./";
+import { Symbol } from "../Global";
+import { Setting, TradeManager } from ".";
 
 export class AccountManager {
     static g_accounts: Map<string, Site> = new Map<string, Site>();
