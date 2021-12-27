@@ -1,0 +1,19 @@
+{
+  "type": "module",
+  "name": "zeta-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/ChainDev931105/zeta-bot.git",
+  "author": "ChainDev931105 <kaitoyamamoto931105@outlook.com>",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.24.0",
+    "esm": "^3.2.25",
+    "express": "^4.17.2",
+    "mocha": "^9.1.3",
+    "websocket": "^1.0.34"
+  },
+  "scripts": {
+    "test-huobi": "mocha test/huobi-site.test.js"
+  }
+}
