@@ -5,20 +5,20 @@ import { ServerCon } from "./ServerCon";
 import { Setting } from "./Setting";
 
 export class TradeManager {
-    static g_bRunning = true;
+    static g_bRunning: Boolean = true;
 
     constructor() {
     }
 
-    static InitLog(onLog) {// 'onLog' is callback function
+    static InitLog(onLog: ((x:string) => void)): void {// 'onLog' is callback function
     }
 
-    static MainProcess() {
+    static MainProcess(): void {
         try
         {
             Setting.ReadGlobalConfig();
             this.PutLog("---------------------------------------------------------------------");
-            this.PutLog("---------------------------", Setting.g_sClientName, "---------------------------");
+            this.PutLog("---------------------------" + Setting.g_sClientName + "---------------------------");
             this.PutLog("---------------------------------------------------------------------");
 
             ServerCon.Connect();
@@ -47,14 +47,14 @@ export class TradeManager {
             this.PutLog("step 4 - OrderManager.Prepare() Success");
 
             this.g_bRunning = true;
-            let nCounter = 0;
-            let nFailedCounter = 0;
+            let nCounter: number = 0;
+            let nFailedCounter: number = 0;
             while (this.g_bRunning) {
-                let bCheck = true;
-                if (bCheck) bCheck &= Setting.OnTick(); // Check Server Command, SystemReport
-                if (bCheck) bCheck &= AccountManager.OnTick(); // AccountReport, SymbolReport
-                if (bCheck) bCheck &= OrderManager.OnTick(); // Check Position Match, 
-                if (bCheck) bCheck &= LogicManager.OnTick(); // LogicReport, Run Logics
+                let bCheck: Boolean = true;
+                if (bCheck) bCheck &&= Setting.OnTick(); // Check Server Command, SystemReport
+                if (bCheck) bCheck &&= AccountManager.OnTick(); // AccountReport, SymbolReport
+                if (bCheck) bCheck &&= OrderManager.OnTick(); // Check Position Match, 
+                if (bCheck) bCheck &&= LogicManager.OnTick(); // LogicReport, Run Logics
 
                 if (!bCheck) {
                     nFailedCounter++;
@@ -66,18 +66,18 @@ export class TradeManager {
             }
             this.deinit();
         }
-        catch (e) {
-            this.PutLog("Exception in MainProcess: ", e.message);
+        catch (e: any) {
+            this.PutLog("Exception in MainProcess: " + e.message);
             this.g_bRunning = false;
             this.deinit();
         }
     }
 
-    static SetStop() {
+    static SetStop(): void {
         this.g_bRunning = false;
     }
 
-    static deinit() {
+    static deinit(): void {
         LogicManager.Deinit();
         OrderManager.Deinit();
         AccountManager.Deinit();
@@ -85,6 +85,6 @@ export class TradeManager {
         ServerCon.Disconnect();
     }
 
-    static PutLog(sLog, bSendToServer = true) {
+    static PutLog(sLog: string, bSendToServer: Boolean = true): void {
     }
 }
