@@ -2,7 +2,6 @@ import { UTimer } from "../Utils";
 import { Site } from "../Sites/Site";
 import { Symbol } from "../Global/Symbol";
 import { Setting, TradeManager } from "./";
-import { access } from "fs";
 
 export class AccountManager {
     static g_accounts: Map<string, Site> = new Map<string, Site>();
@@ -31,6 +30,12 @@ export class AccountManager {
                 TradeManager.PutLog(account.m_siteConfig.account_id + " R_Login() Failed");
                 bRlt = false;
             }
+        });
+        this.g_lstSymbol = [];
+        this.g_accounts.forEach(account => {
+            account.m_symbols.forEach(symbol => {
+                this.g_lstSymbol.push(symbol);
+            });
         });
 
         // TODO: wait for rate to be valid

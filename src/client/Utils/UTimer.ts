@@ -1,7 +1,7 @@
 
 export class UTimer {
     m_nPeriodMS: number = 0;
-    // DateTime m_dtLast;
+    m_dtLast: Date = new Date();
 
     constructor(nPeriodMS: number, bStartNow: Boolean = true) {
         this.m_nPeriodMS = nPeriodMS;
