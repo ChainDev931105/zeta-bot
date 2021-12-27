@@ -5,7 +5,7 @@ import { ServerCon } from "./ServerCon";
 import { Setting } from "./Setting";
 import { TradeManager } from "./TradeManager";
 
-module.exports = {
+export {
     AccountManager,
     LogicManager,
     OrderManager,

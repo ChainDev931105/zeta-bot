@@ -1,5 +1,7 @@
 
 export class ServerCon {
+    static g_bConnected: Boolean = false;
+
     constructor() {
 
     }
