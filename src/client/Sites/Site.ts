@@ -37,13 +37,11 @@ export class Site {
     R_UpdatePosInfo(): void {
     }
 
-    /*public virtual List<OHLC> R_GetPastRate(DateTime dtStart, DateTime dtEnd, int nUnitInMinutes)
-    {
+    /*public virtual List<OHLC> R_GetPastRate(DateTime dtStart, DateTime dtEnd, int nUnitInMinutes) {
         return new List<OHLC>();
     }
 
-    protected void PutSiteLog(string sLog)
-    {
+    protected void PutSiteLog(string sLog) {
         TradeManager.PutLog(string.Format("<{0}> {1}", m_siteConfig.account_id, sLog));
     }*/
 
@@ -53,8 +51,7 @@ export class Site {
     }
 
     /*protected void OnRateUpdate(string sSymbol, double dAsk, double dBid, 
-        double dAskVolume = 1, double dBidVolume = 1)
-    {
+        double dAskVolume = 1, double dBidVolume = 1) {
         if (m_symbols.ContainsKey(sSymbol))
         {
             m_symbols[sSymbol].SetRate(dAsk, dBid, dAskVolume, dBidVolume);

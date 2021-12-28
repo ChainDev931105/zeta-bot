@@ -57,8 +57,7 @@ export class Setting {
     static Deinit(): void {
     }
 
-    static SetLogicConfig(jLogicConfig: any)
-    {
+    static SetLogicConfig(jLogicConfig: any) {
         // TODO: parse jLogicConfig to g_lstLogicConfig
 
         // try
@@ -75,8 +74,7 @@ export class Setting {
         TradeManager.PutLog("SetLogicConfig Success");
     }
 
-    static SetSiteConfig(sSiteConfig: any)
-    {
+    static SetSiteConfig(sSiteConfig: any) {
         // TODO: parse sSiteConfig to g_lstSiteConfig
         
         // try

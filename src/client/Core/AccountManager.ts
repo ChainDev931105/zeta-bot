@@ -58,8 +58,7 @@ export class AccountManager {
     }
 
     static reportAccounts(): void {
-        if (this.g_nLastReportedAccount >= this.g_accounts.size)
-        {
+        if (this.g_nLastReportedAccount >= this.g_accounts.size) {
             if (this.g_accounts.size < 1) return;
             this.g_nLastReportedAccount %= this.g_accounts.size;
         }
@@ -70,8 +69,7 @@ export class AccountManager {
     }
 
     static reportSymbols(): void {
-        if (this.g_nLastReportedSymbol >= this.g_lstSymbol.length)
-        {
+        if (this.g_nLastReportedSymbol >= this.g_lstSymbol.length) {
             if (this.g_lstSymbol.length < 1) return;
             this.g_nLastReportedSymbol %= this.g_lstSymbol.length;
         }
