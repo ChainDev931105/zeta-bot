@@ -14,4 +14,4 @@ This will be built by **React**.
 ## *backend*
 This will be built by **Express**.
 
-![image][/a.png]
+<img title="a title" alt="Alt text" src="images/trading-bot-diagram.png">
