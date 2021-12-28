@@ -10,3 +10,5 @@
 
 - update project composition. (*client*, *backend*, *frontend*, *common*)
 - update README and add a diagram
+- in *backend*, complete the part for *client* config.
+- Config folder: these files store config information
