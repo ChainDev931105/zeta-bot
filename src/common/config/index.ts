@@ -1,7 +1,7 @@
 import { LogicConfig } from "./LogicConfig";
 import { SiteConfig } from "./SiteConfig";
 
-export { 
+export {
     LogicConfig, 
     SiteConfig
 };

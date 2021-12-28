@@ -1,0 +1,30 @@
+{
+	"Huobi_demo_0": {
+		"site_type": "HuobiSite",
+		"property": "demo",
+		"username": "aaaaa",
+		"password": "bbbbb",
+		"symbols": []
+	},
+	"Serum_demo_0": {
+		"site_type": "SerumSite",
+		"property": "demo",
+		"username": "aaaaa",
+		"password": "bbbbb",
+		"symbols": []
+	},
+	"Huobi_real_1": {
+		"site_type": "HuobiSite",
+		"property": "real",
+		"username": "aaaaa",
+		"password": "bbbbb",
+		"symbols": []
+	},
+	"Serum_real_1": {
+		"site_type": "SerumSite",
+		"property": "real",
+		"username": "aaaaa",
+		"password": "bbbbb",
+		"symbols": []
+	}
+}

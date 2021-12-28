@@ -1,0 +1,12 @@
+{
+	"HuobiSite": {
+		"symbol_map": {
+			":BTCUSD": "BTCUSD"
+		}
+	},
+	"SerumSite": {
+		"symbol_map": {
+			":BTCUSD": "BTCUSD"
+		}
+	}
+}

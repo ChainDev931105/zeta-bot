@@ -1,0 +1,27 @@
+{
+	"TestClient": {
+		"logics": [
+			{
+				"logic_id": "arbit_huobi_serum",
+				"logic_type": "ArbitrageLogic",
+				"products": [
+					{ "account_id": "Huobi_demo_0", "symbol": ":BTCUSD" },
+					{ "account_id": "Serum_demo_0", "symbol": ":BTCUSD" }
+				],
+				"parameters": [
+					{ "name": "ex_sRateFolder", "value": "btc_huobi_serum" }
+				]
+			},
+			{
+				"logic_id": "TWAP_huobi",
+				"logic_type": "TWAPLogic",
+				"products": [
+					{ "account_id": "Huobi_demo_0", "symbol": ":BTCUSD" }
+				],
+				"parameters": [
+					{ "name": "ex_sRateFolder", "value": "btc_huobi" }
+				]
+			}
+		]
+	}
+}

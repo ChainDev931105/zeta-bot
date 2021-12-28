@@ -1,12 +1,15 @@
 {
   "dependencies": {
+    "@types/express": "^4.17.13",
     "@types/node": "^17.0.5",
+    "dotenv": "^10.0.0",
     "typescript": "^4.5.4"
   },
   "devDependencies": {
     "ts-node": "^10.4.0"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "server": "ts-node src/backend/index.ts"
   }
 }
