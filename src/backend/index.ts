@@ -1,5 +1,6 @@
 import express from 'express'
-import { KEY_LOGIC_CONFIG, KEY_SITE_CONFIG } from '../common'
+import { LogicConfig, SiteConfig } from '../common/config';
+import { ConfigManager } from './ConfigManager';
 
 require('dotenv').config()
 
@@ -7,12 +8,17 @@ require('dotenv').config()
 const PORT = process.env.BACKEND_PORT;
 const app = express();
 
-app.get("/" + KEY_LOGIC_CONFIG, async function (req, res) {
-    res.send({});
-});
-
-app.get("/" + KEY_SITE_CONFIG, async function (req, res) {
-    res.send({});
+app.get("/config", async function (req: any, res) {
+    let sClientName: string = req.params["client"];
+    let {lstLogicConfig, lstSiteConfig}: {lstLogicConfig: Array<LogicConfig>, lstSiteConfig: Array<SiteConfig>} = 
+        ConfigManager.GenerateConfigs(sClientName);
+    res.json({
+        success: true,
+        data: {
+            sites: lstSiteConfig,
+            logics: lstLogicConfig
+        }
+    });
 });
 
 

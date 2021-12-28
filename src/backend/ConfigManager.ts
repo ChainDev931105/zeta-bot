@@ -29,14 +29,13 @@ export class ConfigManager {
         }
     }
 
-    static GenerateConfigs(sClientName: string, lstLogicConfig: Array<LogicConfig>, lstSiteConfig: Array<SiteConfig>): void {
+    static GenerateConfigs(sClientName: string): { lstLogicConfig:Array<LogicConfig>, lstSiteConfig:Array<SiteConfig>} {
         try {
-            lstLogicConfig = [];
-            lstSiteConfig = [];
+            let lstLogicConfig: Array<LogicConfig> = [];
+            let lstSiteConfig: Array<SiteConfig> = [];
 
             let jClient: any = this.g_clients.get(sClientName);
-            if (jClient === undefined) return;
-            if (!("logics" in jClient)) return;
+            if (jClient === undefined || !("logics" in jClient)) return { lstLogicConfig, lstSiteConfig };
 
             let productMap: Map<string, Map<string, Boolean>> = new Map<string, Map<string, Boolean>>();
             let jLogics: Array<any> = jClient["logics"];
@@ -77,10 +76,9 @@ export class ConfigManager {
             });
         }
         catch (e: any) {
-            lstLogicConfig = [];
-            lstSiteConfig = [];
             console.log("GenerateConfig Exception : " + e.message);
         }
+        return { lstLogicConfig: [], lstSiteConfig: [] };
     }
 
     static generateSiteConfig(account_id: string, lstSymbol: Array<string>): SiteConfig
@@ -105,7 +103,7 @@ export class ConfigManager {
 
         let site_type: string = jAccount["site_type"];
         let jSite: any | undefined = this.g_sites.get(site_type);
-        if (jSite !== undefined){
+        if (jSite !== undefined) {
             let property: string = jAccount["property"];
             if (property && property.length > 0) site_type = site_type + ":" + property;
             if (!this.g_sites.has(site_type)) return sSymbol;
