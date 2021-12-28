@@ -4,12 +4,13 @@ import { ConfigManager } from './ConfigManager';
 
 require('dotenv').config()
 
-
 const PORT = process.env.BACKEND_PORT;
 const app = express();
 
-app.get("/config", async function (req: any, res) {
-    let sClientName: string = req.params["client"];
+ConfigManager.Load();
+
+app.get("/config", async function (req: any, res: any) {
+    let sClientName: string = req.query["client"];
     let {lstLogicConfig, lstSiteConfig}: {lstLogicConfig: Array<LogicConfig>, lstSiteConfig: Array<SiteConfig>} = 
         ConfigManager.GenerateConfigs(sClientName);
     res.json({

@@ -2,9 +2,9 @@ import fs from 'fs';
 import { LogicConfig, SiteConfig } from "../common/config";
 
 export class ConfigManager {
-    static CONFIG_PATH_CLIENTS: string = "/Config/clients.json";
-    static CONFIG_PATH_ACCOUNTS: string = "/Config/accounts.json";
-    static CONFIG_PATH_SITES: string = "/Config/sites.json";
+    static CONFIG_PATH_CLIENTS: string = "./Config/clients.json";
+    static CONFIG_PATH_ACCOUNTS: string = "./Config/accounts.json";
+    static CONFIG_PATH_SITES: string = "./Config/sites.json";
 
     static g_clients: Map<string, object> = new Map<string, object>();
     static g_accounts: Map<string, object> = new Map<string, object>();
@@ -35,7 +35,10 @@ export class ConfigManager {
             let lstSiteConfig: Array<SiteConfig> = [];
 
             let jClient: any = this.g_clients.get(sClientName);
-            if (jClient === undefined || !("logics" in jClient)) return { lstLogicConfig, lstSiteConfig };
+            if (jClient === undefined || !("logics" in jClient)) {
+                console.log("Can't find " + sClientName + " or logics property", this.g_accounts);
+                return { lstLogicConfig, lstSiteConfig };
+            }
 
             let productMap: Map<string, Map<string, Boolean>> = new Map<string, Map<string, Boolean>>();
             let jLogics: Array<any> = jClient["logics"];
@@ -74,6 +77,7 @@ export class ConfigManager {
                 if (products !== undefined)
                     lstSiteConfig.push(this.generateSiteConfig(account_id, Array.from(products.keys())));
             });
+            return { lstLogicConfig, lstSiteConfig };
         }
         catch (e: any) {
             console.log("GenerateConfig Exception : " + e.message);
