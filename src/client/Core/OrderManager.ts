@@ -5,11 +5,11 @@ export class OrderManager {
     }
     
     static Prepare(): Boolean {
-        return false;
+        return true;
     }
 
     static OnTick(): Boolean {
-        return false;
+        return true;
     }
 
     static Deinit(): void {

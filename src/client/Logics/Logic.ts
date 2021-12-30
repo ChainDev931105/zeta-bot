@@ -1,6 +1,8 @@
 import { LogicConfig } from "../../common/config";
 import { AccountManager } from "../Core";
 import { Symbol } from "../Global";
+import { ArbitrageLogic } from "./ArbitrageLogic";
+import { TWAPLogic } from "./TWAPLogic";
 
 export class Logic {
     m_logicConfig: LogicConfig = new LogicConfig();
@@ -18,9 +20,22 @@ export class Logic {
     ex_nStepCnt: Number = 1;
 
     static CreateLogic(logicConfig: LogicConfig): Logic {
-        // TODO: 
+        let logic: Logic;
+        if (logicConfig.logic_type === "ArbitrageLogic") {
+            logic = new ArbitrageLogic();
+        }
+        else if (logicConfig.logic_type === "TWAPLogic") {
+            logic = new TWAPLogic();
+        }
+        else {
+            logic = new Logic();
+        }
+        logic.m_logicConfig = logicConfig;
+        logicConfig.parameters.forEach(param => {
+            logic.SetParam(param[0], param[1]);
+        });
 
-        return new Logic();
+        return logic;
     }
 
     Init(): Boolean {
@@ -43,6 +58,7 @@ export class Logic {
     }
 
     SetParam(sName: string, sValue: string): Boolean {
+        console.log(sName, sValue);
         let bSuccess: Boolean = true;
         try {
             if (sName == "ex_sRateFolder") this.ex_sRateFolder = sValue;

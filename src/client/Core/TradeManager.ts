@@ -1,12 +1,15 @@
 import { AccountManager } from "./AccountManager";
 import { LogicManager } from "./LogicManager";
 import { OrderManager } from "./OrderManager";
-import { ServerCon } from "./ServerCon";
 import { Setting } from "./Setting";
 
 export class TradeManager {
     static g_bRunning: Boolean = true;
+    static g_nCounter: number = 0;
+    static g_nFailedCounter: number = 0;
     static OnLog: ((str:string) => void);
+    static g_timerServerCon: NodeJS.Timer | null = null;
+    static g_timerOnTick: NodeJS.Timer | null = null;
 
     constructor() {
     }
@@ -17,7 +20,7 @@ export class TradeManager {
 
     }
 
-    static MainProcess(): void {
+    static async MainProcess() {
         try
         {
             Setting.ReadGlobalConfig();
@@ -25,12 +28,9 @@ export class TradeManager {
             this.PutLog("---------------------------" + Setting.g_sClientName + "---------------------------");
             this.PutLog("---------------------------------------------------------------------");
 
-            ServerCon.Connect();
-            this.PutLog("step 0 - ServerCon.Connect() Success");
-            
             // - Send Init Request to Server
             // - Wait for LogicConfig and SiteConfig to be set
-            if (!Setting.Prepare()) return;
+            await Setting.Prepare();
             this.PutLog("step 1 - Setting.Prepare() Success");
 
             // - Create Sites from SiteConfigs
@@ -50,24 +50,10 @@ export class TradeManager {
             if (!OrderManager.Prepare()) return;
             this.PutLog("step 4 - OrderManager.Prepare() Success");
 
-            this.g_bRunning = true;
-            let nCounter: number = 0;
-            let nFailedCounter: number = 0;
-            while (this.g_bRunning) {
-                let bCheck: Boolean = true;
-                if (bCheck) bCheck &&= Setting.OnTick(); // Check Server Command, SystemReport
-                if (bCheck) bCheck &&= AccountManager.OnTick(); // AccountReport, SymbolReport
-                if (bCheck) bCheck &&= OrderManager.OnTick(); // Check Position Match, 
-                if (bCheck) bCheck &&= LogicManager.OnTick(); // LogicReport, Run Logics
+            this.g_timerServerCon = setInterval(() => {}, 1000);
+            this.g_timerOnTick = setInterval(this.OnTick, 10);
 
-                if (!bCheck) {
-                    nFailedCounter++;
-                }
-                nCounter++;
-                if (nCounter >= Setting.g_nSleepCount) {
-                    nCounter = 0;
-                }
-            }
+            this.g_bRunning = true;
             this.deinit();
         }
         catch (e: any) {
@@ -77,8 +63,26 @@ export class TradeManager {
         }
     }
 
+    static OnTick(): Boolean {
+        let bCheck: Boolean = this.g_bRunning;
+        if (bCheck) bCheck &&= Setting.OnTick(); // Check Server Command, SystemReport
+        if (bCheck) bCheck &&= AccountManager.OnTick(); // AccountReport, SymbolReport
+        if (bCheck) bCheck &&= OrderManager.OnTick(); // Check Position Match, 
+        if (bCheck) bCheck &&= LogicManager.OnTick(); // LogicReport, Run Logics
+
+        if (!bCheck) {
+            this.g_nFailedCounter++;
+        }
+        this.g_nCounter++;
+        if (this.g_nCounter >= Setting.g_nSleepCount) {
+            this.g_nCounter = 0;
+        }
+        return bCheck;
+    }
+
     static SetStop(): void {
         this.g_bRunning = false;
+        if (this.g_timerOnTick !== null) clearInterval(this.g_timerOnTick);
     }
 
     static deinit(): void {
@@ -86,10 +90,11 @@ export class TradeManager {
         OrderManager.Deinit();
         AccountManager.Deinit();
         Setting.Deinit();
-        ServerCon.Disconnect();
+        if (this.g_timerServerCon !== null) clearInterval(this.g_timerServerCon);
     }
 
     static PutLog(sLog: string, bSendToServer: Boolean = true): void {
         // TODO: 
+        console.log(sLog);
     }
 }
