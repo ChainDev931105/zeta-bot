@@ -12,3 +12,11 @@
 - update README and add a diagram
 - in *backend*, complete the part for *client* config.
 - Config folder: these files store config information
+
+## [0.2.1] 2021-12-29
+- remove ServerCon in *client*
+- test *backend*
+
+## [0.2.2] 2021-12-30
+- loading general config in *client*
+- Implement getting config part in *client*
