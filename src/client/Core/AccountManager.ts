@@ -1,5 +1,5 @@
 import { UTimer } from "../Utils";
-import { Site } from "../Sites/Site";
+import { Site, CreateSite } from "../Sites";
 import { Symbol } from "../Global";
 import { Setting, TradeManager } from ".";
 
@@ -18,8 +18,9 @@ export class AccountManager {
     static Prepare(): Boolean {
         this.g_accounts.clear();
         Setting.g_lstSiteConfig.forEach(siteConfig => {
-            this.g_accounts.set(siteConfig.account_id, Site.CreateSite(siteConfig));
+            this.g_accounts.set(siteConfig.account_id, CreateSite(siteConfig));
         });
+        console.log(this.g_accounts);
         let bRlt: Boolean = true;
         this.g_accounts.forEach(account => {
             if (bRlt && !account.R_Init()) {
@@ -37,6 +38,8 @@ export class AccountManager {
                 this.g_lstSymbol.push(symbol);
             });
         });
+        this.g_timerAccountReport = new UTimer(100);
+        this.g_timerSymbolReport = new UTimer(100);
 
         // TODO: wait for rate to be valid
         return bRlt;

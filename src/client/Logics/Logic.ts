@@ -1,8 +1,6 @@
 import { LogicConfig } from "../../common/config";
-import { AccountManager } from "../Core";
+//import { AccountManager } from "../Core";
 import { Symbol } from "../Global";
-import { ArbitrageLogic } from "./ArbitrageLogic";
-import { TWAPLogic } from "./TWAPLogic";
 
 export class Logic {
     m_logicConfig: LogicConfig = new LogicConfig();
@@ -19,31 +17,16 @@ export class Logic {
     // ORDER_ACCEPT ex_eOrderAccept = ORDER_ACCEPT.StopOrder;
     ex_nStepCnt: Number = 1;
 
-    static CreateLogic(logicConfig: LogicConfig): Logic {
-        let logic: Logic;
-        if (logicConfig.logic_type === "ArbitrageLogic") {
-            logic = new ArbitrageLogic();
-        }
-        else if (logicConfig.logic_type === "TWAPLogic") {
-            logic = new TWAPLogic();
-        }
-        else {
-            logic = new Logic();
-        }
-        logic.m_logicConfig = logicConfig;
-        logicConfig.parameters.forEach(param => {
-            logic.SetParam(param[0], param[1]);
-        });
+    constructor() {
 
-        return logic;
     }
 
     Init(): Boolean {
         this.m_lstProdut = [];
-        this.m_logicConfig.products.forEach(product => {
-            let symbol: Symbol | undefined = AccountManager.g_accounts.get(product[0])?.m_symbols.get(product[1]);
-            if (symbol !== undefined) this.m_lstProdut.push(symbol);
-        });
+        // this.m_logicConfig.products.forEach(product => {
+        //     let symbol: Symbol | undefined = AccountManager.g_accounts.get(product[0])?.m_symbols.get(product[1]);
+        //     if (symbol !== undefined) this.m_lstProdut.push(symbol);
+        // });
         
         // TODO: init for rate record
 

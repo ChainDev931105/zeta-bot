@@ -1,4 +1,4 @@
-import { Logic } from "../Logics/Logic";
+import { Logic, CreateLogic } from "../Logics";
 import { Setting, TradeManager } from "./";
 
 export class LogicManager {
@@ -11,7 +11,7 @@ export class LogicManager {
     static Prepare(): Boolean {
         this.g_logics.clear();
         Setting.g_lstLogicConfig.forEach(logicConfig => {
-            this.g_logics.set(logicConfig.logic_id, Logic.CreateLogic(logicConfig));
+            this.g_logics.set(logicConfig.logic_id, CreateLogic(logicConfig));
         });
 
         let bRlt: Boolean = true;
@@ -23,7 +23,6 @@ export class LogicManager {
                 bRlt = false;
             }
         });
-        console.log("hello2", bRlt);
         return bRlt;
     }
 

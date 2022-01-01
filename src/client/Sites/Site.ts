@@ -10,8 +10,8 @@ export class Site {
     }
 
     R_Init(): Boolean {
-        /*this.m_symbols.clear();
-        this.m_siteConfig.symbols.
+        this.m_symbols.clear();
+        /*this.m_siteConfig.symbols.
         foreach (var symbol in m_siteConfig.symbols)
         {
             m_symbols.Add(symbol[0], new Symbol()
@@ -44,11 +44,6 @@ export class Site {
     protected void PutSiteLog(string sLog) {
         TradeManager.PutLog(string.Format("<{0}> {1}", m_siteConfig.account_id, sLog));
     }*/
-
-    static CreateSite(siteConfig: SiteConfig): Site {
-        // TODO
-        return new Site();
-    }
 
     /*protected void OnRateUpdate(string sSymbol, double dAsk, double dBid, 
         double dAskVolume = 1, double dBidVolume = 1) {

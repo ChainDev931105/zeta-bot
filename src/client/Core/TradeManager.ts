@@ -36,7 +36,6 @@ export class TradeManager {
             // - Create Sites from SiteConfigs
             // - Init sites
             // - Login sites
-            // - Wait for rates to be valid
             if (!AccountManager.Prepare()) return;
             this.PutLog("step 2 - AccountManager.Prepare() Success");
 
@@ -51,7 +50,7 @@ export class TradeManager {
             this.PutLog("step 4 - OrderManager.Prepare() Success");
 
             this.g_timerServerCon = setInterval(() => {}, 1000);
-            this.g_timerOnTick = setInterval(this.OnTick, 10);
+            this.g_timerOnTick = setInterval(this.OnTick, 2000);
 
             this.g_bRunning = true;
             this.deinit();
@@ -69,6 +68,7 @@ export class TradeManager {
         if (bCheck) bCheck &&= AccountManager.OnTick(); // AccountReport, SymbolReport
         if (bCheck) bCheck &&= OrderManager.OnTick(); // Check Position Match, 
         if (bCheck) bCheck &&= LogicManager.OnTick(); // LogicReport, Run Logics
+        console.log("OnTick");
 
         if (!bCheck) {
             this.g_nFailedCounter++;
