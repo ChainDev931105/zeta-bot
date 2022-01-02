@@ -1,5 +1,6 @@
 import { SiteConfig } from "../../common/config";
 import { Symbol } from "../Global";
+import { ROrder } from "../Global/Global";
 
 export class Site {
     m_siteConfig: SiteConfig = new SiteConfig();
@@ -11,15 +12,12 @@ export class Site {
 
     R_Init(): Boolean {
         this.m_symbols.clear();
-        /*this.m_siteConfig.symbols.
-        foreach (var symbol in m_siteConfig.symbols)
-        {
-            m_symbols.Add(symbol[0], new Symbol()
-            {
-                m_site = this,
-                m_sSymbolName = symbol[0]
-            });
-        }*/
+        this.m_siteConfig.symbols.forEach(symbol => {
+            let sym: Symbol = new Symbol();
+            sym.m_site = this;
+            sym.m_sSymbolName = symbol[0];
+            this.m_symbols.set(symbol[0], sym);
+        });
         return true;
     }
 
@@ -37,6 +35,10 @@ export class Site {
     R_UpdatePosInfo(): void {
     }
 
+    R_OrderSend(rOrder: ROrder): Boolean {
+        return false;
+    }
+
     /*public virtual List<OHLC> R_GetPastRate(DateTime dtStart, DateTime dtEnd, int nUnitInMinutes) {
         return new List<OHLC>();
     }
@@ -47,8 +49,7 @@ export class Site {
 
     /*protected void OnRateUpdate(string sSymbol, double dAsk, double dBid, 
         double dAskVolume = 1, double dBidVolume = 1) {
-        if (m_symbols.ContainsKey(sSymbol))
-        {
+        if (m_symbols.ContainsKey(sSymbol)) {
             m_symbols[sSymbol].SetRate(dAsk, dBid, dAskVolume, dBidVolume);
         }
     }*/

@@ -1,5 +1,7 @@
 import { Site } from "../Sites";
-import { EP } from "./";
+import { ORDER_COMMAND, ORDER_KIND } from "./Enums";
+import { EP } from "./Constants";
+import { Logic } from "../Logics";
 
 export class Rate {
     dt: Date = new Date();
@@ -67,4 +69,26 @@ export class Symbol {
     Ask(): number { return this.m_rate.dAsk; }
     Bid(): number { return this.m_rate.dBid; }
     Mid(): number { return (this.m_rate.dAsk + this.m_rate.dBid) / 2; }
+}
+
+export class TimeFrame {
+
+}
+
+export class ROrder {
+    m_logic: Logic | null = null;
+    m_symbol: Symbol = new Symbol();
+    m_nStep: number = 0;
+
+    m_eCmd: ORDER_COMMAND = 0;
+    m_eKind: ORDER_KIND = 0;
+
+    m_dSigLots: number = 0;
+    m_dSigPrice: number = 0;
+    m_dtSigTime: Date = new Date();
+    m_dExcLots: number = 0;
+    m_dExcPrice: number = 0;
+    m_dtExcTime: Date = new Date();
+
+    m_dClosedProfit: number = 0;
 }
