@@ -20,3 +20,7 @@
 ## [0.2.2] 2021-12-30
 - loading general config in *client*
 - Implement getting config part in *client*
+
+## [0.2.3] 2021-01-02
+- add Global classes
+- update Site, Logic interface
