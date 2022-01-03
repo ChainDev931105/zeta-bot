@@ -20,7 +20,6 @@ export class AccountManager {
         Setting.g_lstSiteConfig.forEach(siteConfig => {
             this.g_accounts.set(siteConfig.account_id, CreateSite(siteConfig));
         });
-        console.log(this.g_accounts);
         let bRlt: Boolean = true;
         this.g_accounts.forEach(account => {
             if (bRlt && !account.R_Init()) {

@@ -1,4 +1,5 @@
 import websocket from "websocket"
+import gzip from "node-gzip";
 
 export class UWebsocket {
     m_sWSUrl: string = "";
@@ -8,6 +9,8 @@ export class UWebsocket {
     private m_bClosing: Boolean = false;
     private m_wsClient: websocket.client | null = null;
     private m_connection: websocket.connection | null = null;
+    private m_QueueSMsg: string[] = [];
+    private m_QueueJMsg: object[] = [];
 
     constructor(
         sWSUrl: string, 
@@ -32,21 +35,41 @@ export class UWebsocket {
             connection.on('close', () => {
                 this.OnError && this.OnError('Connection Closed');
             });
-            connection.on('message', (message: websocket.Message) => {
+            connection.on('message', async (message: websocket.Message) => {
+                let sMsg: string;
                 if (message.type === 'utf8') {
-                    try {
-                        this.OnReceive && this.OnReceive(message.utf8Data);
-                    }
-                    catch {}
-                    try {
-                        this.OnReceiveJson && this.OnReceiveJson(JSON.parse(message.utf8Data));
-                    }
-                    catch {}
+                    sMsg = message.utf8Data;
                 }
+                else {
+                    sMsg = JSON.stringify(message.binaryData);
+                    await gzip.ungzip(message.binaryData).then((myBuffer: Buffer) => {
+                        let tmp: any[] = [];
+                        myBuffer.forEach(b => {
+                            tmp.push(String.fromCharCode(b));
+                        });
+                        sMsg = tmp.join('');
+                    });
+                }
+                try {
+                    this.OnReceive && this.OnReceive(sMsg);
+                }
+                catch {}
+                try {
+                    this.OnReceiveJson && this.OnReceiveJson(JSON.parse(sMsg));
+                }
+                catch {}
             });
+
+            while (this.m_QueueSMsg.length > 0) {
+                let sMsg: string | undefined = this.m_QueueSMsg.pop();
+                if (sMsg !== undefined) this.Send(sMsg);
+            }
+            while (this.m_QueueJMsg.length > 0) {
+                let jMsg: object | undefined = this.m_QueueJMsg.pop();
+                if (jMsg !== undefined) this.SendJson(jMsg);
+            }
         });
 
-        //this.m_wsClient.on('connect', this.OnConnection);
         this.m_wsClient.connect(this.m_sWSUrl);
     }
 
@@ -55,10 +78,14 @@ export class UWebsocket {
     }
 
     Send(sMsg: string): void {
-        this.m_connection && this.m_connection.sendUTF(sMsg);
+        console.log("send", sMsg, this.m_connection && this.m_connection.connected);
+        (this.m_connection && this.m_connection.connected) ? 
+            this.m_connection.sendUTF(sMsg) : this.m_QueueSMsg.push(sMsg);
     }
 
     SendJson(jMsg: object): void {
-        this.m_connection && this.m_connection.sendUTF(JSON.stringify(jMsg));
+        console.log("send", jMsg, this.m_connection && this.m_connection.connected);
+        (this.m_connection && this.m_connection.connected) ? 
+            this.m_connection.sendUTF(JSON.stringify(jMsg)) : this.m_QueueJMsg.push(jMsg);
     }
 }

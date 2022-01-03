@@ -107,14 +107,14 @@ export class ConfigManager {
 
         let site_type: string = jAccount["site_type"];
         let jSite: any | undefined = this.g_sites.get(site_type);
-        if (jSite !== undefined) {
+        if (jSite === undefined) {
             let property: string = jAccount["property"];
             if (property && property.length > 0) site_type = site_type + ":" + property;
             if (!this.g_sites.has(site_type)) return sSymbol;
         }
         let jSymbolMap: any = jSite["symbol_map"];
         if (!jSymbolMap) return sSymbol;
-        if (sSymbol in jSymbolMap.ContainsKey(sSymbol)) return jSymbolMap[sSymbol];
+        if (sSymbol in jSymbolMap) return jSymbolMap[sSymbol];
         return sSymbol;
     }
 }

@@ -15,9 +15,7 @@ export class LogicManager {
         });
 
         let bRlt: Boolean = true;
-        console.log(this.g_logics);
         this.g_logics.forEach(logic => {
-            console.log(logic);
             if (bRlt && !logic.Init()) {
                 TradeManager.PutLog(logic.m_logicConfig.logic_id + " Init() Failed");
                 bRlt = false;

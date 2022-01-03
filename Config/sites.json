@@ -1,7 +1,7 @@
 {
 	"HuobiSite": {
 		"symbol_map": {
-			":BTCUSD": "BTCUSD"
+			":BTCUSD": "btcusdt"
 		}
 	},
 	"SerumSite": {

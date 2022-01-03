@@ -41,7 +41,6 @@ export class Logic {
     }
 
     SetParam(sName: string, sValue: string): Boolean {
-        console.log(sName, sValue);
         let bSuccess: Boolean = true;
         try {
             if (sName == "ex_sRateFolder") this.ex_sRateFolder = sValue;
