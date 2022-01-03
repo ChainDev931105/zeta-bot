@@ -1,6 +1,5 @@
 import { SiteConfig } from "../../common/config";
-import { Symbol } from "../Global";
-import { ROrder } from "../Global/Global";
+import { Symbol, ROrder } from "../Global";
 
 export class Site {
     m_siteConfig: SiteConfig = new SiteConfig();
