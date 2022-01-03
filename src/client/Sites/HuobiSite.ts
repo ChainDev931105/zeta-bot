@@ -49,14 +49,25 @@ export class HuobiSite extends Site {
     }
 
     onWSReceive(jMsg: any): void {
-        console.log(JSON.stringify(jMsg));
         try {
             const ch: string = jMsg["ch"].toString();
+            const chWords: string[] = ch.split('.');
+            if (chWords.length === 3 && chWords[0] === "market" && chWords[2] === "ticker") {
+                const sSymbol: string = chWords[1];
+                const jTick: any = jMsg["tick"];
+                if (jTick) {
+                    const dAsk: number = jTick["ask"];
+                    const dBid: number = jTick["bid"];
+                    const dAskSize: number = jTick["askSize"];
+                    const dBidSize: number = jTick["bidSize"];
+                    super.OnRateUpdate(sSymbol, dAsk, dBid, dAskSize, dBidSize);
+                }
+            }
         }
         catch {}
     }
 
     onWSError(sError: string): void {
-        console.log("Huobi error : " + sError);
+        super.PutSiteLog("Huobi error : " + sError);
     }
 }

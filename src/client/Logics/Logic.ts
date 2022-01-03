@@ -69,6 +69,14 @@ export class Logic {
         return true;
     }
 
+    protected CheckProcessing(): Boolean {
+        let bRlt = false;
+        this.m_lstProdut.forEach(product => {
+            if (product.CounterCheck()) bRlt = true;
+        });
+        return bRlt;
+    }
+
     recordRate(): void {
         // TODO: 
     }

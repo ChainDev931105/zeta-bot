@@ -42,6 +42,8 @@ export class Symbol {
     m_rate: Rate = new Rate();
     m_dRealLots: number = 0;
 
+    private m_nCounter: number = 0;
+
     SetRate(dAsk: number, dBid: number, dAskVolume: number, dBidVolume: number): void {
         let dt: Date = new Date();
         let rate: Rate = new Rate();
@@ -65,9 +67,23 @@ export class Symbol {
         return true;
     }
 
+    CounterCheck(): Boolean {
+        return this.m_nCounter > 0;
+    }
+
+    CounterPlus(): void {
+        this.m_nCounter++;
+    }
+
+    CounterMinus(): void {
+        this.m_nCounter--;
+    }
+
     IsValidRate(): Boolean { return this.m_rate.IsValidRate(); }
     Ask(): number { return this.m_rate.dAsk; }
     Bid(): number { return this.m_rate.dBid; }
+    AskVolume(): number { return this.m_rate.dAskVolume; }
+    BidVolume(): number { return this.m_rate.dBidVolume; }
     Mid(): number { return (this.m_rate.dAsk + this.m_rate.dBid) / 2; }
 }
 

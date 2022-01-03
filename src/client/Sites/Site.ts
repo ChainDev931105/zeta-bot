@@ -1,4 +1,5 @@
 import { SiteConfig } from "../../common/config";
+import { TradeManager } from "../Core";
 import { Symbol, ROrder } from "../Global";
 
 export class Site {
@@ -46,10 +47,11 @@ export class Site {
         TradeManager.PutLog(string.Format("<{0}> {1}", m_siteConfig.account_id, sLog));
     }*/
 
-    /*protected void OnRateUpdate(string sSymbol, double dAsk, double dBid, 
-        double dAskVolume = 1, double dBidVolume = 1) {
-        if (m_symbols.ContainsKey(sSymbol)) {
-            m_symbols[sSymbol].SetRate(dAsk, dBid, dAskVolume, dBidVolume);
-        }
-    }*/
+    protected OnRateUpdate(sSymbol: string, dAsk: number, dBid: number, dAskVolume: number = 1, dBidVolume: number = 1): void {
+        this.m_symbols.get(sSymbol)?.SetRate(dAsk, dBid, dAskVolume, dBidVolume);
+    }
+
+    protected PutSiteLog(sLog: string): void {
+        TradeManager.PutLog("<" + this.m_siteConfig.account_id + "> " + sLog);
+    }
 }
