@@ -1,11 +1,12 @@
+import { ZERO_TIME } from "../Global";
 
 export class UTimer {
-    m_nPeriodMS: number = 0;
-    m_dtLast: Date = new Date();
+    m_nPeriodMS: number;
+    m_dtLast: Date;
 
     constructor(nPeriodMS: number, bStartNow: Boolean = true) {
         this.m_nPeriodMS = nPeriodMS;
-        // this.m_dtLast = bStartNow ? new DateTime() : DateTime.Now;
+        this.m_dtLast = bStartNow ? new Date() : ZERO_TIME;
     }
 
     Check(): Boolean {

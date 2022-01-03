@@ -1,10 +1,10 @@
 import { Site } from "../Sites";
 import { ORDER_COMMAND, ORDER_KIND } from "./Enums";
-import { EP } from "./Constants";
+import { EP, ZERO_TIME } from "./Constants";
 import { Logic } from "../Logics";
 
 export class Rate {
-    dt: Date = new Date();
+    dt: Date = ZERO_TIME;
     dAsk: number = 0;
     dBid: number = 0;
     dAskVolume: number = 0;
@@ -23,8 +23,8 @@ export class Rate {
 }
 
 export class OHLC {
-    dtStart: Date = new Date();
-    dtEnd: Date = new Date();
+    dtStart: Date = ZERO_TIME;
+    dtEnd: Date = ZERO_TIME;
     dOpenAsk: number = 0;
     dHighAsk: number = 0;
     dLowAsk: number = 0;
@@ -36,7 +36,7 @@ export class OHLC {
 }
 
 export class Symbol {
-    m_site: Site | null = null;
+    m_site: Site;
     m_sSymbolName: string = "";
 
     m_rate: Rate = new Rate();
@@ -44,10 +44,14 @@ export class Symbol {
 
     private m_nCounter: number = 0;
 
+    constructor(site: Site, sSymbolName: string) {
+        this.m_site = site;
+        this.m_sSymbolName = sSymbolName;
+    }
+
     SetRate(dAsk: number, dBid: number, dAskVolume: number, dBidVolume: number): void {
-        let dt: Date = new Date();
-        let rate: Rate = new Rate();
-        rate.dt = dt;
+        const rate: Rate = new Rate();
+        rate.dt = new Date();
         rate.dAsk = dAsk;
         rate.dBid = dBid;
         rate.dAskVolume = dAskVolume;
@@ -93,7 +97,7 @@ export class TimeFrame {
 
 export class ROrder {
     m_logic: Logic | null = null;
-    m_symbol: Symbol = new Symbol();
+    m_symbol: Symbol;
     m_nStep: number = 0;
 
     m_eCmd: ORDER_COMMAND = 0;
@@ -101,10 +105,15 @@ export class ROrder {
 
     m_dSigLots: number = 0;
     m_dSigPrice: number = 0;
-    m_dtSigTime: Date = new Date();
+    m_dtSigTime: Date = ZERO_TIME;
     m_dExcLots: number = 0;
     m_dExcPrice: number = 0;
-    m_dtExcTime: Date = new Date();
+    m_dtExcTime: Date = ZERO_TIME;
 
+    m_sMagicNumber: string = "";
     m_dClosedProfit: number = 0;
+
+    constructor(symbol: Symbol) {
+        this.m_symbol = symbol;
+    }
 }

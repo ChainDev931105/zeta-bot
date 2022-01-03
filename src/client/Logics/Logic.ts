@@ -1,6 +1,7 @@
 import { LogicConfig } from "../../common/config";
+import { OrderManager, TradeManager } from "../Core";
 //import { AccountManager } from "../Core";
-import { Symbol } from "../Global";
+import { ROrder, Symbol, ZERO_TIME } from "../Global";
 
 export class Logic {
     m_logicConfig: LogicConfig = new LogicConfig();
@@ -9,7 +10,7 @@ export class Logic {
     m_sRateFile: string = "";
     m_sPrvRateLine: string = "";
     m_rateCache: Array<string> = [];
-    m_dtLastRateRecord: Date = new Date();
+    m_dtLastRateRecord: Date = ZERO_TIME;
 
     ex_sRateFolder: string = "";
     ex_dLots: Number = 0;
@@ -75,6 +76,20 @@ export class Logic {
             if (product.CounterCheck()) bRlt = true;
         });
         return bRlt;
+    }
+
+    protected OrderSend(rOrder: ROrder): void {
+        if (rOrder.m_logic === null) rOrder.m_logic = this;
+        TradeManager.PutLog([
+            "<OrderSend>", 
+            rOrder.m_logic.m_logicConfig.logic_id,
+            rOrder.m_symbol.m_sSymbolName,
+            rOrder.m_eCmd,
+            rOrder.m_eKind,
+            rOrder.m_dSigPrice,
+            rOrder.m_dSigLots
+        ].join(' '));
+        OrderManager.OrderProcess(rOrder);
     }
 
     recordRate(): void {

@@ -1,6 +1,6 @@
 import { Symbol, TimeFrame, OHLC, Rate, ROrder } from "./Global";
 import { ORDER_COMMAND, ORDER_KIND, ORDER_ACCEPT } from "./Enums";
-import { EP } from "./Constants";
+import { EP, ZERO_TIME } from "./Constants";
 
 export {
     Symbol,
@@ -9,5 +9,5 @@ export {
     Rate,
     ROrder,
     ORDER_COMMAND, ORDER_KIND, ORDER_ACCEPT,
-    EP
+    EP, ZERO_TIME
 };
