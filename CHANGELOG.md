@@ -24,3 +24,7 @@
 ## [0.2.3] 2021-01-02
 - add Global classes
 - update Site, Logic interface
+
+## [0.2.4] 2021-01-03
+- update OrderSend part
+- getting price data from Huobi Site
