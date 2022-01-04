@@ -28,3 +28,7 @@
 ## [0.2.4] 2021-01-03
 - update OrderSend part
 - getting price data from Huobi Site
+
+## [0.2.5] 2021-01-04
+- Add logger
+- Add Price recorder
