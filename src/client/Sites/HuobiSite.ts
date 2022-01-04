@@ -45,7 +45,8 @@ export class HuobiSite extends Site {
     }
 
     R_OrderSend(rOrder: ROrder): Boolean {
-        return super.R_OrderSend(rOrder);
+        if (!super.R_OrderSend(rOrder)) return false;
+        return true;
     }
 
     onWSReceive(jMsg: any): void {

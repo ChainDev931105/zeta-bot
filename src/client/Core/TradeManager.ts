@@ -2,6 +2,8 @@ import { AccountManager } from "./AccountManager";
 import { LogicManager } from "./LogicManager";
 import { OrderManager } from "./OrderManager";
 import { Setting } from "./Setting";
+import { DateToStr, UFile } from "../Utils";
+import { HISTORY_DIR, MAIN_LOG_DIR } from "../Global/Constants";
 
 export class TradeManager {
     static g_bRunning: Boolean = true;
@@ -10,13 +12,16 @@ export class TradeManager {
     static OnLog: ((str:string) => void);
     static g_timerServerCon: NodeJS.Timer | null = null;
     static g_timerOnTick: NodeJS.Timer | null = null;
+    static g_sLogFilePath: string = "";
 
     constructor() {
     }
 
-    static InitLog(onLog: ((x:string) => void)): void {// 'onLog' is callback function
+    static InitLog(onLog: ((x:string) => void) = (() => {})): void {// 'onLog' is callback function
         this.OnLog = onLog;
-        // TODO: init log dir and file
+        if (!UFile.DirExists(HISTORY_DIR)) UFile.CreateDir(HISTORY_DIR);
+        if (!UFile.DirExists(MAIN_LOG_DIR)) UFile.CreateDir(MAIN_LOG_DIR);
+        this.g_sLogFilePath = MAIN_LOG_DIR + DateToStr(new Date(), "yyyyMMddHH") + ".txt";
 
     }
 
@@ -94,7 +99,8 @@ export class TradeManager {
     }
 
     static PutLog(sLog: string, bSendToServer: Boolean = true): void {
-        // TODO: 
         console.log(sLog);
+        sLog = DateToStr(new Date(), "[yyyy-MM-dd HH:mm:ss.fff] ") + sLog;
+        UFile.AppendLine(this.g_sLogFilePath, sLog);
     }
 }

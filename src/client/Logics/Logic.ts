@@ -1,7 +1,9 @@
 import { LogicConfig } from "../../common/config";
-import { OrderManager, TradeManager } from "../Core";
+import { AccountManager, OrderManager, TradeManager } from "../Core";
 //import { AccountManager } from "../Core";
-import { ROrder, Symbol, ZERO_TIME } from "../Global";
+import { ORDER_ACCEPT, ROrder, Symbol, ZERO_TIME } from "../Global";
+import { RATE_CACHE_SIZE, RATE_DIR, RATE_RECORD_PERIOD_MS } from "../Global/Constants";
+import { UFile } from "../Utils";
 
 export class Logic {
     m_logicConfig: LogicConfig = new LogicConfig();
@@ -15,7 +17,7 @@ export class Logic {
     ex_sRateFolder: string = "";
     ex_dLots: Number = 0;
     ex_nNewOrderCnt: Number = 0;
-    // ORDER_ACCEPT ex_eOrderAccept = ORDER_ACCEPT.StopOrder;
+    ex_eOrderAccept: ORDER_ACCEPT = ORDER_ACCEPT.StopOrder;
     ex_nStepCnt: Number = 1;
 
     constructor() {
@@ -24,20 +26,18 @@ export class Logic {
 
     Init(): Boolean {
         this.m_lstProdut = [];
-        // this.m_logicConfig.products.forEach(product => {
-        //     let symbol: Symbol | undefined = AccountManager.g_accounts.get(product[0])?.m_symbols.get(product[1]);
-        //     if (symbol !== undefined) this.m_lstProdut.push(symbol);
-        // });
+        this.m_logicConfig.products.forEach(product => {
+            let symbol: Symbol | undefined = AccountManager.g_accounts.get(product[0])?.m_symbols.get(product[1]);
+            if (symbol !== undefined) this.m_lstProdut.push(symbol);
+        });
         
-        // TODO: init for rate record
+        if (this.ex_sRateFolder.length > 0) {
+            if (!UFile.DirExists(RATE_DIR)) UFile.CreateDir(RATE_DIR);
+            const sRatePath: string = RATE_DIR + this.ex_sRateFolder + "/";
+            if (!UFile.DirExists(sRatePath)) UFile.CreateDir(sRatePath);
+            this.m_sRateFile = sRatePath + (new Date().toDateString()) + ".csv";
+        }
 
-        // if (this.ex_sRateFolder.length > 0)
-        // {
-        //     if (!Directory.Exists(Global.RATE_DIR)) Directory.CreateDirectory(Global.RATE_DIR);
-        //     string sRatePath = Global.RATE_DIR + ex_sRateFolder + "\\";
-        //     if (!Directory.Exists(sRatePath)) Directory.CreateDirectory(sRatePath);
-        //     m_sRateFile = sRatePath + DateTime.Now.ToString("yyyyMMdd") + ".csv";
-        // }
         return true;
     }
 
@@ -49,12 +49,12 @@ export class Logic {
             else if (sName == "ex_nNewOrderCnt") this.ex_nNewOrderCnt = parseInt(sValue);
             else if (sName == "ex_nStepCnt") this.ex_nStepCnt = parseInt(sValue);
             else if (sName == "ex_eOrderAccept") {
-                // TODO: 
-                // try
-                // {
-                //     ex_eOrderAccept = (ORDER_ACCEPT)int.Parse(sValue);
-                // }
-                // catch { bSuccess = Enum.TryParse(sValue, true, out ex_eOrderAccept); }
+                try {
+                    this.ex_eOrderAccept = (<any>ORDER_ACCEPT)[parseInt(sValue)];
+                }
+                catch {
+                    this.ex_eOrderAccept = (<any>ORDER_ACCEPT)[sValue];
+                }
             }
         }
         catch (e: any) {
@@ -64,9 +64,10 @@ export class Logic {
     }
 
     OnTick(): Boolean {
-        // if (this.ex_sRateFolder.length > 0) {
-        //     recordRate();
-        // }
+        if (this.ex_sRateFolder.length > 0) {
+            this.recordRate();
+        }
+
         return true;
     }
 
@@ -81,7 +82,7 @@ export class Logic {
     protected OrderSend(rOrder: ROrder): void {
         if (rOrder.m_logic === null) rOrder.m_logic = this;
         TradeManager.PutLog([
-            "<OrderSend>", 
+            "<OrderSend>",
             rOrder.m_logic.m_logicConfig.logic_id,
             rOrder.m_symbol.m_sSymbolName,
             rOrder.m_eCmd,
@@ -92,7 +93,24 @@ export class Logic {
         OrderManager.OrderProcess(rOrder);
     }
 
-    recordRate(): void {
-        // TODO: 
+    protected recordRate(): void {
+        let rates: number[] = [];
+        this.m_lstProdut.forEach(product => {
+            rates.push(product.Ask());
+            rates.push(product.Bid());
+        });
+        const dtCur: Date = new Date();
+        let sLine: string = rates.join(',');
+        if (this.m_sPrvRateLine !== sLine) {
+            this.m_sPrvRateLine = sLine;
+            sLine = (dtCur.toString()) + "," + sLine;
+            this.m_rateCache.push(sLine);
+            if (this.m_rateCache.length >= RATE_CACHE_SIZE || 
+                (dtCur.valueOf() - this.m_dtLastRateRecord.valueOf()) > RATE_RECORD_PERIOD_MS) {
+                this.m_dtLastRateRecord = dtCur;
+                UFile.AppendAllLines(this.m_sRateFile, this.m_rateCache);
+                this.m_rateCache = [];
+            }
+        }
     }
 }
