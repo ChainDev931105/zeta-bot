@@ -32,3 +32,5 @@
 ## [0.2.5] 2021-01-04
 - Add logger
 - Add Price recorder
+- Add Websocket to *server*
+- Start *front* and add Websocket to *front*
