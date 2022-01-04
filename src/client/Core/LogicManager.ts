@@ -1,8 +1,11 @@
 import { Logic, CreateLogic } from "../Logics";
+import { UTimer } from "../Utils";
 import { Setting, TradeManager } from "./";
 
 export class LogicManager {
     static g_logics: Map<string, Logic> = new Map<string, Logic>();
+    static g_timerLogicReport: UTimer;
+    static g_nLastReportedLogic: number = 0;
 
     constructor() {
 
@@ -21,6 +24,7 @@ export class LogicManager {
                 bRlt = false;
             }
         });
+        this.g_timerLogicReport = new UTimer(500);
         return bRlt;
     }
 
@@ -29,9 +33,26 @@ export class LogicManager {
         this.g_logics.forEach(logic => {
             bRlt &&= logic.OnTick();
         });
+        if (this.g_timerLogicReport.Check()) this.reportLogics();
         return bRlt;
     }
 
     static Deinit(): void {
+    }
+
+    static reportLogics(): void {
+        if (this.g_nLastReportedLogic >= this.g_logics.size) {
+            if (this.g_logics.size < 1) return;
+            this.g_nLastReportedLogic %= this.g_logics.size;
+        }
+        let logic: Logic | undefined = this.g_logics.get(Array.from(this.g_logics.keys())[this.g_nLastReportedLogic]);
+        if (logic) this.reportLogic(logic);
+
+        this.g_nLastReportedLogic++;
+    }
+
+    static reportLogic(logic: Logic): void {
+        Setting.Report("logic", logic.m_logicConfig.logic_id, {
+        });
     }
 }

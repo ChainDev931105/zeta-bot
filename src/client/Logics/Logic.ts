@@ -3,7 +3,7 @@ import { AccountManager, OrderManager, TradeManager } from "../Core";
 //import { AccountManager } from "../Core";
 import { ORDER_ACCEPT, ROrder, Symbol, ZERO_TIME } from "../Global";
 import { RATE_CACHE_SIZE, RATE_DIR, RATE_RECORD_PERIOD_MS } from "../Global/Constants";
-import { UFile } from "../Utils";
+import { DateToStr, UFile } from "../Utils";
 
 export class Logic {
     m_logicConfig: LogicConfig = new LogicConfig();
@@ -35,7 +35,7 @@ export class Logic {
             if (!UFile.DirExists(RATE_DIR)) UFile.CreateDir(RATE_DIR);
             const sRatePath: string = RATE_DIR + this.ex_sRateFolder + "/";
             if (!UFile.DirExists(sRatePath)) UFile.CreateDir(sRatePath);
-            this.m_sRateFile = sRatePath + (new Date().toDateString()) + ".csv";
+            this.m_sRateFile = sRatePath + DateToStr(new Date(), "yyyyMMddHH") + ".csv";
         }
 
         return true;
@@ -103,7 +103,7 @@ export class Logic {
         let sLine: string = rates.join(',');
         if (this.m_sPrvRateLine !== sLine) {
             this.m_sPrvRateLine = sLine;
-            sLine = (dtCur.toString()) + "," + sLine;
+            sLine = DateToStr(dtCur, "yyyy-MM-dd HH:mm:ss.fff") + "," + sLine;
             this.m_rateCache.push(sLine);
             if (this.m_rateCache.length >= RATE_CACHE_SIZE || 
                 (dtCur.valueOf() - this.m_dtLastRateRecord.valueOf()) > RATE_RECORD_PERIOD_MS) {

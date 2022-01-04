@@ -37,8 +37,8 @@ export class AccountManager {
                 this.g_lstSymbol.push(symbol);
             });
         });
-        this.g_timerAccountReport = new UTimer(100);
-        this.g_timerSymbolReport = new UTimer(100);
+        this.g_timerAccountReport = new UTimer(500);
+        this.g_timerSymbolReport = new UTimer(500);
 
         // TODO: wait for rate to be valid
         return bRlt;
@@ -53,7 +53,7 @@ export class AccountManager {
 
         if (this.g_timerAccountReport.Check()) this.reportAccounts();
         if (this.g_timerSymbolReport.Check()) this.reportSymbols();
-        return false;
+        return true;
     }
 
     static Deinit(): void {
@@ -65,7 +65,7 @@ export class AccountManager {
             this.g_nLastReportedAccount %= this.g_accounts.size;
         }
         let account: Site | undefined = this.g_accounts.get(Array.from(this.g_accounts.keys())[this.g_nLastReportedAccount]);
-        // TODO: reportAccount(account)
+        if (account) this.reportAccount(account);
 
         this.g_nLastReportedAccount++;
     }
@@ -76,6 +76,22 @@ export class AccountManager {
             this.g_nLastReportedSymbol %= this.g_lstSymbol.length;
         }
         let symbol: Symbol = this.g_lstSymbol[this.g_nLastReportedSymbol];
-        // TODO: reportSymbol(symbol)
+        this.reportSymbol(symbol);
+    }
+
+    static reportAccount(account: Site): void {
+        Setting.Report("account", account.m_siteConfig.account_id, {
+        });
+    }
+
+    static reportSymbol(symbol: Symbol): void {
+        Setting.Report("symbol", symbol.m_site.m_siteConfig.account_id + "_" + symbol.m_sSymbolName, {
+            rate: {
+                ask: symbol.Ask(),
+                bid: symbol.Bid(),
+                askVolume: symbol.AskVolume(),
+                bidVolume: symbol.BidVolume()
+            }
+        });
     }
 }

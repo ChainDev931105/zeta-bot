@@ -1,7 +1,7 @@
 import fs from 'fs';
 import axios from 'axios'
 import { TradeManager } from "./TradeManager";
-import { UTimer } from "../Utils";
+import { UTimer, UWebsocket } from "../Utils";
 import { LogicConfig, SiteConfig } from "../../common/config";
 
 export class Setting {
@@ -16,6 +16,7 @@ export class Setting {
     static g_lstLogicConfig: Array<LogicConfig> = [];
     static g_lstSiteConfig: Array<SiteConfig> = [];
     static g_timerSystemReport: UTimer;
+    static g_wsClient: UWebsocket = new UWebsocket("ws://localhost:3002/up");
     static g_bInited: Boolean = false;
     
     static ReadGlobalConfig() {
@@ -35,6 +36,8 @@ export class Setting {
     }
     
     static async Prepare() {
+        this.g_wsClient.Open();
+
         this.g_lstLogicConfig = [];
         this.g_lstSiteConfig = [];
         await axios.get(this.g_sServerHost + "/config?client=" + this.g_sClientName).then(function (resp) {
@@ -55,13 +58,25 @@ export class Setting {
 
     static OnTick(): Boolean {
         if (this.g_timerSystemReport.Check()) this.reportSystem();
-        return false;
+        return true;
     }
 
     static Deinit(): void {
     }
 
-    static reportSystem(): void {
-        // TODO: 
+    static Report(sType: string, sKey: string, data: any): void {
+        const report: any = {
+            key: [this.g_sClientName, sType, sKey].join('$'),
+            data: data
+        };
+        this.g_wsClient.Send(JSON.stringify({
+            command: "report",
+            report: report
+        }));
+    }
+
+    private static reportSystem(): void {
+        this.Report("system", "system", {
+        });
     }
 }

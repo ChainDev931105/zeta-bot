@@ -10,11 +10,10 @@ export class UTimer {
     }
 
     Check(): Boolean {
-        // if (m_dtLast.AddMilliseconds(m_nPeriodMS) <= DateTime.Now)
-        // {
-        //     m_dtLast = DateTime.Now;
-        //     return true;
-        // }
+        if ((new Date()).valueOf() - this.m_dtLast.valueOf() >= this.m_nPeriodMS) {
+            this.m_dtLast = new Date();
+            return true;
+        }
         return false;
     }
 }

@@ -15,6 +15,9 @@ export class HuobiSite extends Site {
             this.onWSReceive, //onReceiveJson
             this.onWSError //onError
             );
+
+        //this.OnRateUpdate__ = this.OnRateUpdate__.bind(this);
+        this.onWSReceive = this.onWSReceive.bind(this);
     }
 
     R_Init(): Boolean {
@@ -49,7 +52,7 @@ export class HuobiSite extends Site {
         return true;
     }
 
-    onWSReceive(jMsg: any): void {
+    onWSReceive: ((jMsg: any) => void) = (jMsg: any) => {
         try {
             const ch: string = jMsg["ch"].toString();
             const chWords: string[] = ch.split('.');
@@ -61,7 +64,7 @@ export class HuobiSite extends Site {
                     const dBid: number = jTick["bid"];
                     const dAskSize: number = jTick["askSize"];
                     const dBidSize: number = jTick["bidSize"];
-                    super.OnRateUpdate(sSymbol, dAsk, dBid, dAskSize, dBidSize);
+                    this.OnRateUpdate(sSymbol, dAsk, dBid, dAskSize, dBidSize);
                 }
             }
         }

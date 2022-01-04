@@ -25,6 +25,7 @@ export class Site {
             let sym: Symbol = new Symbol(this, symbol[0]);
             this.m_symbols.set(symbol[0], sym);
         });
+        console.log(this.m_symbols);
         this.m_partOrders.clear();
         return true;
     }
@@ -66,7 +67,8 @@ export class Site {
         TradeManager.PutLog(string.Format("<{0}> {1}", m_siteConfig.account_id, sLog));
     }*/
 
-    protected OnRateUpdate(sSymbol: string, dAsk: number, dBid: number, dAskVolume: number = 1, dBidVolume: number = 1): void {
+    OnRateUpdate(sSymbol: string, dAsk: number, dBid: number, dAskVolume: number = 1, dBidVolume: number = 1): void {
+        console.log("hello3", this);
         this.m_symbols.get(sSymbol)?.SetRate(dAsk, dBid, dAskVolume, dBidVolume);
     }
 
@@ -95,6 +97,10 @@ export class Site {
     }
 
     protected PutSiteLog(sLog: string): void {
-        TradeManager.PutLog("<" + this.m_siteConfig.account_id + "> " + sLog);
+        TradeManager.PutLog("<" + (this.m_siteConfig ? this.m_siteConfig.account_id : "") + "> " + sLog);
+    }
+
+    private GetThis(): any {
+        return this;
     }
 }

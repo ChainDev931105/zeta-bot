@@ -52,11 +52,11 @@ export class TradeManager {
             // - Compare VPosition vs ROrder
             if (!OrderManager.Prepare()) return;
             this.PutLog("step 4 - OrderManager.Prepare() Success");
+            this.g_bRunning = true;
 
             this.g_timerServerCon = setInterval(() => {}, 1000);
             this.g_timerOnTick = setInterval(this.OnTick, 2000);
 
-            this.g_bRunning = true;
             this.deinit();
         }
         catch (e: any) {
@@ -67,19 +67,25 @@ export class TradeManager {
     }
 
     static OnTick(): Boolean {
-        let bCheck: Boolean = this.g_bRunning;
+        console.log(TradeManager.g_bRunning);
+        let bCheck: Boolean = TradeManager.g_bRunning;
+        let tmp: string = bCheck.toString();
         if (bCheck) bCheck &&= Setting.OnTick(); // Check Server Command, SystemReport
+        tmp += bCheck;
         if (bCheck) bCheck &&= AccountManager.OnTick(); // AccountReport, SymbolReport
+        tmp += bCheck;
         if (bCheck) bCheck &&= OrderManager.OnTick(); // Check Position Match, 
+        tmp += bCheck;
         if (bCheck) bCheck &&= LogicManager.OnTick(); // LogicReport, Run Logics
-        console.log("OnTick");
+        tmp += bCheck;
+        console.log("OnTick", tmp);
 
         if (!bCheck) {
-            this.g_nFailedCounter++;
+            TradeManager.g_nFailedCounter++;
         }
-        this.g_nCounter++;
-        if (this.g_nCounter >= Setting.g_nSleepCount) {
-            this.g_nCounter = 0;
+        TradeManager.g_nCounter++;
+        if (TradeManager.g_nCounter >= Setting.g_nSleepCount) {
+            TradeManager.g_nCounter = 0;
         }
         return bCheck;
     }
