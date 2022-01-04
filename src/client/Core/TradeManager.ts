@@ -26,8 +26,7 @@ export class TradeManager {
     }
 
     static async MainProcess() {
-        try
-        {
+        try {
             Setting.ReadGlobalConfig();
             this.PutLog("---------------------------------------------------------------------");
             this.PutLog("---------------------------" + Setting.g_sClientName + "---------------------------");

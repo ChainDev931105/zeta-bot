@@ -2,7 +2,8 @@
   "scripts": {
     "build": "tsc",
     "server": "ts-node src/backend/index.ts",
-    "client": "ts-node src/client/index.ts"
+    "client": "ts-node src/client/index.ts",
+    "front": "cd src/frontend && yarn start"
   },
   "dependencies": {
     "axios": "^0.24.0",
