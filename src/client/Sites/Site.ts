@@ -25,7 +25,6 @@ export class Site {
             let sym: Symbol = new Symbol(this, symbol[0]);
             this.m_symbols.set(symbol[0], sym);
         });
-        console.log(this.m_symbols);
         this.m_partOrders.clear();
         return true;
     }
@@ -68,7 +67,6 @@ export class Site {
     }*/
 
     OnRateUpdate(sSymbol: string, dAsk: number, dBid: number, dAskVolume: number = 1, dBidVolume: number = 1): void {
-        console.log("hello3", this);
         this.m_symbols.get(sSymbol)?.SetRate(dAsk, dBid, dAskVolume, dBidVolume);
     }
 

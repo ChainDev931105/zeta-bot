@@ -50,16 +50,25 @@ export class AccountManager {
             if (bRlt && !site.R_OnTick()) bRlt = false;
         });
         if (!bRlt) return false;
+        if (!this.checkRates()) return false;
 
         if (this.g_timerAccountReport.Check()) this.reportAccounts();
         if (this.g_timerSymbolReport.Check()) this.reportSymbols();
-        return true;
+        return bRlt;
     }
 
     static Deinit(): void {
     }
 
-    static reportAccounts(): void {
+    private static checkRates(): Boolean {
+        let bRlt: Boolean = true;
+        this.g_lstSymbol.forEach(symbol => {
+            bRlt &&= symbol.m_rate.IsValidRate();
+        });
+        return bRlt;
+    }
+
+    private static reportAccounts(): void {
         if (this.g_nLastReportedAccount >= this.g_accounts.size) {
             if (this.g_accounts.size < 1) return;
             this.g_nLastReportedAccount %= this.g_accounts.size;
@@ -70,7 +79,7 @@ export class AccountManager {
         this.g_nLastReportedAccount++;
     }
 
-    static reportSymbols(): void {
+    private static reportSymbols(): void {
         if (this.g_nLastReportedSymbol >= this.g_lstSymbol.length) {
             if (this.g_lstSymbol.length < 1) return;
             this.g_nLastReportedSymbol %= this.g_lstSymbol.length;
@@ -79,12 +88,12 @@ export class AccountManager {
         this.reportSymbol(symbol);
     }
 
-    static reportAccount(account: Site): void {
+    private static reportAccount(account: Site): void {
         Setting.Report("account", account.m_siteConfig.account_id, {
         });
     }
 
-    static reportSymbol(symbol: Symbol): void {
+    private static reportSymbol(symbol: Symbol): void {
         Setting.Report("symbol", symbol.m_site.m_siteConfig.account_id + "_" + symbol.m_sSymbolName, {
             rate: {
                 ask: symbol.Ask(),

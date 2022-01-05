@@ -2,7 +2,14 @@ import { Site } from './Site'
 import { Symbol, ROrder } from "../Global";
 import { UWebsocket } from '../Utils';
 
-const WS_BASE_URL: string = "wss://api.huobipro.com/ws";
+const WS_URL_BASE: string = "wss://api.huobipro.com/ws";
+
+const URL_BASE_API: string = "http://api.huobipro.com";
+const URL_POS_LIST: string = "/v1/order/openOrders";
+const URL_NEW_ORDER: string = "/v1/order/orders/place";
+const URL_ACC_LIST: string = "/v1/account/accounts";
+const URL_ACC_INFO: string = "/v1/account/accounts/{account-id}/balance";
+
 
 export class HuobiSite extends Site {
     m_websocket: UWebsocket;
@@ -10,14 +17,11 @@ export class HuobiSite extends Site {
     constructor() {
         super();
         this.m_websocket = new UWebsocket(
-            WS_BASE_URL,
+            WS_URL_BASE,
             null, //onReceive
             this.onWSReceive, //onReceiveJson
             this.onWSError //onError
             );
-
-        //this.OnRateUpdate__ = this.OnRateUpdate__.bind(this);
-        this.onWSReceive = this.onWSReceive.bind(this);
     }
 
     R_Init(): Boolean {
@@ -64,14 +68,14 @@ export class HuobiSite extends Site {
                     const dBid: number = jTick["bid"];
                     const dAskSize: number = jTick["askSize"];
                     const dBidSize: number = jTick["bidSize"];
-                    this.OnRateUpdate(sSymbol, dAsk, dBid, dAskSize, dBidSize);
+                    super.OnRateUpdate(sSymbol, dAsk, dBid, dAskSize, dBidSize);
                 }
             }
         }
         catch {}
     }
 
-    onWSError(sError: string): void {
+    onWSError: ((sError: string) => void) = (sError: string) => {
         super.PutSiteLog("Huobi error : " + sError);
     }
 }

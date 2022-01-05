@@ -27,7 +27,6 @@ export class UWebsocket {
     Open(): void {
         this.m_wsClient = new websocket.client();
         this.m_wsClient.on('connect', (connection: websocket.connection) => {
-            console.log('WebSocket client connected');
             this.m_connection = connection;
             connection.on('error', (error: Error) => {
                 this.OnError && this.OnError(error.toString());
@@ -78,13 +77,11 @@ export class UWebsocket {
     }
 
     Send(sMsg: string): void {
-        console.log("send", sMsg, this.m_connection && this.m_connection.connected);
         (this.m_connection && this.m_connection.connected) ? 
             this.m_connection.sendUTF(sMsg) : this.m_QueueSMsg.push(sMsg);
     }
 
     SendJson(jMsg: object): void {
-        console.log("send", jMsg, this.m_connection && this.m_connection.connected);
         (this.m_connection && this.m_connection.connected) ? 
             this.m_connection.sendUTF(JSON.stringify(jMsg)) : this.m_QueueJMsg.push(jMsg);
     }
