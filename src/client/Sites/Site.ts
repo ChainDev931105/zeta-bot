@@ -1,6 +1,7 @@
 import { SiteConfig } from "../../common/config";
 import { OrderManager, TradeManager } from "../Core";
 import { Symbol, ROrder, ORDER_COMMAND, EP } from "../Global";
+import { AccountInfo } from "../Global/Global";
 
 export type PartOrder = {
     dOrderTotPrice: number,
@@ -14,6 +15,7 @@ export class Site {
     m_siteConfig: SiteConfig = new SiteConfig();
     m_symbols: Map<string, Symbol> = new Map<string, Symbol>();
     m_partOrders: Map<string, PartOrder> = new Map<string, PartOrder>();
+    m_accountInfo: AccountInfo = new AccountInfo();
 
     constructor() {
 
@@ -70,7 +72,8 @@ export class Site {
         this.m_symbols.get(sSymbol)?.SetRate(dAsk, dBid, dAskVolume, dBidVolume);
     }
 
-    protected OnOrderUpdate(sSymbol: string, dLots: number, dPrice: number): void {
+    protected OnOrderUpdate: ((sSymbol: string, dLots: number, dPrice: number) => void) = 
+    (sSymbol: string, dLots: number, dPrice: number) => {
         this.PutSiteLog([
             "OnOrderUpdate",
             sSymbol,
@@ -94,11 +97,18 @@ export class Site {
         }
     }
 
-    protected PutSiteLog(sLog: string): void {
-        TradeManager.PutLog("<" + (this.m_siteConfig ? this.m_siteConfig.account_id : "") + "> " + sLog);
+    protected OnOrderFinished: ((sSymbol: string) => void) = (sSymbol: string) => {
+        let partOrder: PartOrder | undefined = this.m_partOrders.get(sSymbol);
+        if (partOrder !== undefined) {
+            OrderManager.OrderFinished(partOrder.sMagicNumber, partOrder.dOrderLots, partOrder.dOrderTotPrice);
+            this.m_partOrders.delete(sSymbol);
+        }
+        else {
+            this.PutSiteLog("Unexpected m_PartOrder");
+        }        
     }
 
-    private GetThis(): any {
-        return this;
+    protected PutSiteLog(sLog: string): void {
+        TradeManager.PutLog("<" + (this.m_siteConfig ? this.m_siteConfig.account_id : "") + "> " + sLog);
     }
 }

@@ -117,3 +117,10 @@ export class ROrder {
         this.m_symbol = symbol;
     }
 }
+
+export class AccountInfo {
+    m_dBalance: number = 0;
+    m_dEquity: number = 0;
+    m_dMargin: number = 0;
+    m_subBalances: Array<any> = [];
+}
