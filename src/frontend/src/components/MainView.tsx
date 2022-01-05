@@ -5,6 +5,7 @@ export const WebSocketDemo = () => {
   //Public API that will echo messages sent to it back to the client
   const [socketUrl, setSocketUrl] = useState("ws://localhost:3002/down");
   const [messageHistory, setMessageHistory] = useState([]);
+  const [reports, setReports] = useState<any>({});
 
   const {
     sendMessage,
@@ -16,13 +17,25 @@ export const WebSocketDemo = () => {
     // if (lastMessage !== null) {
     //   setMessageHistory(prev => prev.concat(lastMessage));
     // }
+    console.log("lastMessage", lastMessage?.data);
+    if (lastMessage) {
+      let dt: any = JSON.parse(lastMessage.data);
+      if (dt["command"] === "report") {
+        console.log("I love KGS");
+        let key: string = dt["report"]["key"];
+        let value: string = dt["report"];
+        let newReports = { ...reports };
+        newReports[key] = value;
+        setReports(newReports);
+      }
+    }
   }, [lastMessage, setMessageHistory]);
 
   const handleClickChangeSocketUrl = useCallback(() =>
     setSocketUrl("ws://localhost:3002/down"), []);
 
   const handleClickSendMessage = useCallback(() =>
-    sendMessage('Hello'), []);
+    sendMessage('{"command": "reset"}'), []);
 
   const connectionStatus = {
     [ReadyState.CONNECTING]: 'Connecting',
@@ -51,6 +64,11 @@ export const WebSocketDemo = () => {
         {messageHistory
           .map((message: any, idx) => <span key={idx}>{message ? message.data : null}</span>)}
       </ul>
+      <div>
+        {Object.keys(reports).map((report, id) => <div>
+          {JSON.stringify(reports[report])}
+          </div>)}
+      </div>
     </div>
   );
 };
