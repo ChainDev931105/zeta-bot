@@ -124,6 +124,12 @@ export class HuobiSite extends Site {
 
     onWSReceive: ((jMsg: any) => void) = (jMsg: any) => {
         try {
+            if ("ping" in jMsg) {
+                this.m_websocketRate.SendJson({
+                    pong: jMsg["ping"]
+                });
+                return;
+            }
             const ch: string = jMsg["ch"].toString();
             const chWords: string[] = ch.split('.');
             if (chWords.length === 3 && chWords[0] === "market" && chWords[2] === "ticker") {
@@ -142,7 +148,13 @@ export class HuobiSite extends Site {
     }
 
     onWSReceiveAcc: ((jMsg: any) => void) = (jMsg: any) => {
-        try { // TODO:
+        try {
+            if (jMsg["action"] === "ping") {
+                jMsg["action"] = "pong";
+                this.m_websocketAccount.SendJson(jMsg);
+                return;
+            }
+            // TODO:
             console.log(jMsg);
         }
         catch {}
