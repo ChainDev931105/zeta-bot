@@ -68,6 +68,8 @@ export class HuobiSite extends Site {
     }
 
     R_Logout(): void {
+        this.m_websocketRate.Close();
+        this.m_websocketAccount.Close();
         super.R_Logout();
     }
 
@@ -110,7 +112,7 @@ export class HuobiSite extends Site {
             "account-id": this.m_accountID
         };
         this.PutSiteLog("OrderSend" + JSON.stringify(params));
-        this.m_huobiRestAPI?.post('/v1/order/orders/place', params).then(res => {
+        this.m_huobiRestAPI?.post(URL_NEW_ORDER, params).then(res => {
             this.PutSiteLog("Order Response: " + JSON.stringify(res));
             if (res["status"] === "ok") {
                 let sOrderID: string = res["data"];
