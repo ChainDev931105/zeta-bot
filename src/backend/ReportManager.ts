@@ -10,10 +10,18 @@ export class ReportManager {
     }
 
     Set(sKey: string, report: any): void {
+        this.g_subscribed.set(sKey, true);
         if (!this.g_reports.has(sKey) || (JSON.stringify(report) !== JSON.stringify(this.g_reports.get(sKey)))) {
             this.g_updated.set(sKey, true);
             this.g_reports.set(sKey, report);
         }
+    }
+
+    Reset(): void {
+        console.log("keys = ", this.g_subscribed.keys());
+        Array.from(this.g_subscribed.keys()).forEach(key => {
+            this.g_updated.set(key, true);
+        });
     }
 
     Updated(sKey: string): Boolean {

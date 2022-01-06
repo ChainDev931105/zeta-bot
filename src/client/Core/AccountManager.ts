@@ -40,7 +40,6 @@ export class AccountManager {
         this.g_timerAccountReport = new UTimer(500);
         this.g_timerSymbolReport = new UTimer(500);
 
-        // TODO: wait for rate to be valid
         return bRlt;
     }
 
@@ -90,6 +89,8 @@ export class AccountManager {
 
     private static reportAccount(account: Site): void {
         Setting.Report("account", account.m_siteConfig.account_id, {
+            site: account.m_siteConfig.site_type,
+            accountInfo: account.m_accountInfo
         });
     }
 

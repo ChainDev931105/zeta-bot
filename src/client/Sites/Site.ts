@@ -14,8 +14,8 @@ export type PartOrder = {
 export class Site {
     m_siteConfig: SiteConfig = new SiteConfig();
     m_symbols: Map<string, Symbol> = new Map<string, Symbol>();
-    m_partOrders: Map<string, PartOrder> = new Map<string, PartOrder>();
     m_accountInfo: AccountInfo = new AccountInfo();
+    protected m_partOrders: Map<string, PartOrder> = new Map<string, PartOrder>();
 
     constructor() {
 

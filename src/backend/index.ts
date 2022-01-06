@@ -27,20 +27,21 @@ app.get("/config", async function (req: any, res: any) {
 
 app.ws('/up', function(ws, req) {
     ws.on('message', function(msg) {
-        console.log(" --ws-- receive up: ", msg);
         try {
             const jMsg: any = JSON.parse(msg.toString());
             if (jMsg["command"] === "report") {
                 reportManager.Set(jMsg["report"]["key"], jMsg["report"]);
             }
         }
-        catch {}
+        catch {
+            console.log(" --ws-- up unexpected message : ", msg);
+        }
     });
 });
 
 app.ws('/down', function(ws, req) {
     ws.on('message', function(msg) {
-        console.log(" --ws-- receive down : ", msg);
+        console.log(" --ws-- down : ", msg);
         try {
             const jMsg: any = JSON.parse(msg.toString());
             if (jMsg["command"] === "subscrbie") {
@@ -49,11 +50,17 @@ app.ws('/down', function(ws, req) {
             else if (jMsg["command"] === "unsubscrbie") {
                 reportManager.Unsubscribe(jMsg["key"]);
             }
+            else if (jMsg["command"] === "reset") {
+                reportManager.Reset();
+            }
         }
-        catch {}
+        catch {
+            console.log(" --ws-- down unexpected message : ", msg);
+        }
     });
     setInterval(() => {
         const updatedList: Array<any> = reportManager.GetUpdatedAll();
+        console.log("updatedList = ", updatedList);
         updatedList.forEach(report => {
             ws.send(JSON.stringify({
                 command: "report",

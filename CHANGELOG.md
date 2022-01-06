@@ -34,3 +34,8 @@
 - Add Price recorder
 - Add Websocket to *server*
 - Start *front* and add Websocket to *front*
+
+## [0.2.6] 2021-01-05
+- Implement Order Part of Huobi
+- Add Demo Site
+- Update *front*, (display information)
