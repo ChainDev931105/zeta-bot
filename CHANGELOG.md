@@ -43,3 +43,4 @@
 ## [0.2.7] 2021-01-07
 - Update *front*, as individual information
 - Update backend (ws -> REST api)
+- Bug fix in getAccountInfo of *client*
