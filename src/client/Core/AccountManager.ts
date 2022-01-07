@@ -51,12 +51,21 @@ export class AccountManager {
         if (!bRlt) return false;
         if (!this.checkRates()) return false;
 
-        if (this.g_timerAccountReport.Check()) this.reportAccounts();
+        if (this.g_timerAccountReport.Check()) {
+            this.reportAccounts();
+            this.updateAccountInfo();
+        }
         if (this.g_timerSymbolReport.Check()) this.reportSymbols();
         return bRlt;
     }
 
     static Deinit(): void {
+    }
+
+    private static updateAccountInfo(): void {
+        this.g_accounts.forEach(site => {
+            site.R_UpdatePosInfo();
+        });
     }
 
     private static checkRates(): Boolean {

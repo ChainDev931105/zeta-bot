@@ -61,6 +61,7 @@ export class HuobiSite extends Site {
                 accounts.forEach(account => {
                     if (account["type"] === "spot") this.m_accountID = account["id"];
                 });
+                this.PutSiteLog("accounts = " + JSON.stringify(accounts));
             }
         });
 
@@ -85,7 +86,7 @@ export class HuobiSite extends Site {
                 let balanceUSD = 0;
                 let marginUSD = 0;
                 balances.forEach(balance => {
-                    if (balance["currency"] === "usdt") {
+                    if (balance["currency"] === "usdt" || balance["currency"] === "usdc") {
                         balanceUSD += balance["balance"];
                     }
                 });

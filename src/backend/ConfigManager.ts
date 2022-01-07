@@ -29,6 +29,10 @@ export class ConfigManager {
         }
     }
 
+    static GetClients(): Array<string> {
+        return Array.from(this.g_clients.keys());
+    }
+
     static GenerateConfigs(sClientName: string): { lstLogicConfig:Array<LogicConfig>, lstSiteConfig:Array<SiteConfig>} {
         try {
             let lstLogicConfig: Array<LogicConfig> = [];

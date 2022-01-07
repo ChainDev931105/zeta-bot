@@ -1,4 +1,5 @@
 import express from 'express'
+import cors from 'cors';
 import expressWs from 'express-ws';
 import { LogicConfig, SiteConfig } from '../common/config';
 import { ConfigManager } from './ConfigManager';
@@ -12,9 +13,13 @@ const reportManager: ReportManager = new ReportManager();
 
 ConfigManager.Load();
 
-app.get("/config", async function (req: any, res: any) {
+app.use(express.json());
+
+app.use(cors());
+
+app.get("/config", function (req: any, res: any) {
     let sClientName: string = req.query["client"];
-    let {lstLogicConfig, lstSiteConfig}: {lstLogicConfig: Array<LogicConfig>, lstSiteConfig: Array<SiteConfig>} = 
+    let { lstLogicConfig, lstSiteConfig }: { lstLogicConfig: Array<LogicConfig>, lstSiteConfig: Array<SiteConfig> } = 
         ConfigManager.GenerateConfigs(sClientName);
     res.json({
         success: true,
@@ -22,6 +27,25 @@ app.get("/config", async function (req: any, res: any) {
             sites: lstSiteConfig,
             logics: lstLogicConfig
         }
+    });
+});
+
+app.get("/clients", function (req: any, res: any) {
+    let clients: Array<string> = ConfigManager.GetClients();
+    res.json({
+        success: true,
+        data: clients
+    });
+});
+
+app.post("/down", function (req: any, res: any) {
+    let reqBody: any = req.body;
+    console.log({ reqBody });
+    let keys: Array<string> = reqBody["keys"];
+    let reports: Array<any> = reportManager.GetReports(keys);
+    res.json({
+        success: true,
+        data: reports
     });
 });
 

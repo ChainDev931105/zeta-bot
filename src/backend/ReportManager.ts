@@ -47,4 +47,16 @@ export class ReportManager {
         });
         return rlt;
     }
+
+    GetReports(keys: Array<string>): Array<any> {
+        let rlt: Array<any> = new Array<any>();
+        Array.from(this.g_reports.keys()).forEach(key => {
+            let bFlag = false;
+            keys.forEach(subKey => {
+                if (key.includes(subKey)) bFlag = true;
+            });
+            if (bFlag) rlt.push(this.g_reports.get(key));
+        });
+        return rlt;
+    }
 }

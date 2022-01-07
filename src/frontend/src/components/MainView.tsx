@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { SystemList } from './SystemList';
 import { LogicList } from './LogicList';
 import { SymbolList } from './SymbolList';
 import { AccountList } from './AccountList';
+import { BACKEND_URL } from '../constants';
 
 const PAGES: Array<string> = [
     "system",
@@ -13,6 +15,18 @@ const PAGES: Array<string> = [
 
 export const MainView = () => {
     const [activePage, setActivepage] = useState(PAGES[0]);
+    const [clients, setClients] = useState<any>([]);
+
+    useEffect(() => {
+        axios.get(BACKEND_URL + "/clients").then(function(rsp) {
+            if (rsp["data"]["success"]) {
+                setClients(rsp["data"]["data"]);
+            }
+        }).catch(function (err) {
+            console.log(err);
+        });
+    }, []);
+
     return (
         <div>
             <div>
@@ -21,10 +35,10 @@ export const MainView = () => {
                 ))}
             </div>
             <div>
-                {activePage === "system" && SystemList}
-                {activePage === "logic" && LogicList}
-                {activePage === "symbol" && SymbolList}
-                {activePage === "account" && AccountList}
+                {activePage === "system" && <SystemList clients={clients} />}
+                {activePage === "logic" && <LogicList clients={clients} />}
+                {activePage === "symbol" && <SymbolList clients={clients} />}
+                {activePage === "account" && <AccountList clients={clients} />}
             </div>
         </div>
     );
