@@ -10,6 +10,7 @@ require('dotenv').config()
 const PORT = process.env.BACKEND_PORT;
 const app = expressWs(express()).app;
 const reportManager: ReportManager = new ReportManager();
+let sendDownWSMsg: ((sMsg: string) => void) | undefined = undefined;
 
 ConfigManager.Load();
 
@@ -40,12 +41,30 @@ app.get("/clients", function (req: any, res: any) {
 
 app.post("/down", function (req: any, res: any) {
     let reqBody: any = req.body;
-    console.log({ reqBody });
+    console.log("/down", { reqBody });
     let keys: Array<string> = reqBody["keys"];
     let reports: Array<any> = reportManager.GetReports(keys);
     res.json({
         success: true,
         data: reports
+    });
+});
+
+app.post("/set_param", function (req: any, res: any) {
+    let reqBody: any = req.body;
+    console.log("/set_param", { reqBody });
+    let data: any = reqBody["data"];
+    let logic_key: string = reqBody["logic_key"];
+    console.log(data);
+    sendDownWSMsg && sendDownWSMsg(JSON.stringify({
+        command: "param",
+        data: {
+            logic_key: logic_key,
+            params: data
+        }
+    }));
+    res.json({
+        success: true
     });
 });
 

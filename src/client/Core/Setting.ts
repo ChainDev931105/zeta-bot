@@ -3,6 +3,7 @@ import axios from 'axios'
 import { TradeManager } from "./TradeManager";
 import { UTimer, UWebsocket } from "../Utils";
 import { LogicConfig, SiteConfig } from "../../common/config";
+import { LogicManager } from '.';
 
 export class Setting {
     static GLOBAL_CONFIG_PATH: string = "./Config/global.json";
@@ -36,6 +37,7 @@ export class Setting {
     }
     
     static async Prepare() {
+        this.g_wsClient.OnReceiveJson = this.onReceiveWS;
         this.g_wsClient.Open();
 
         this.g_lstLogicConfig = [];
@@ -78,5 +80,21 @@ export class Setting {
     private static reportSystem(): void {
         this.Report("system", "system", {
         });
+    }
+
+    private static onReceiveWS: ((jMsg: object) => void) = (jMsg: any) => {
+        try {
+            let cmd: string = jMsg["command"];
+            if (cmd === "param") {
+                let logic_key: string = jMsg["data"]["logic_key"];
+                let params: any = jMsg["data"]["params"];
+                let sClient: string = logic_key.split('$')[0];
+                if (sClient != this.g_sClientName) return;
+                let sLogic: string = logic_key.split('$')[2];
+                let lstParamsparams: Array<Array<string>> = Object.keys(params).map(param => [param, params[param]]);
+                LogicManager.SetParams(sLogic, lstParamsparams);
+            }
+        }
+        catch {}
     }
 }

@@ -8,6 +8,7 @@ import { DateToStr, UFile } from "../Utils";
 export class Logic {
     m_logicConfig: LogicConfig = new LogicConfig();
     m_lstProdut: Array<Symbol> = new Array<Symbol>();
+    m_dicParam: Map<string, string> = new Map<string, string>();
 
     m_sRateFile: string = "";
     m_sPrvRateLine: string = "";
@@ -21,7 +22,7 @@ export class Logic {
     ex_nStepCnt: Number = 1;
 
     constructor() {
-
+        this.m_dicParam.clear();
     }
 
     Init(): Boolean {
@@ -60,6 +61,9 @@ export class Logic {
         catch (e: any) {
             bSuccess = false;
         }
+        if (bSuccess) {
+            this.m_dicParam.set(sName, sValue);
+        }
         return bSuccess;
     }
 
@@ -69,6 +73,14 @@ export class Logic {
         }
 
         return true;
+    }
+
+    GetParamList(): any {
+        let rlt: any = {};
+        Array.from(this.m_dicParam.keys()).forEach(sName => {
+            rlt[sName] = this.m_dicParam.get(sName);
+        });
+        return rlt;
     }
 
     protected CheckProcessing(): Boolean {

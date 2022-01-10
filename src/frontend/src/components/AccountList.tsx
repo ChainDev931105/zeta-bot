@@ -6,7 +6,7 @@ type Props = {
     clients: Array<string>
 };
 
-type AccountType = {
+type AccountReport = {
     key: string,
     data: {
         accountInfo: any | undefined,
@@ -15,13 +15,13 @@ type AccountType = {
 };
 
 export const AccountList = ({ clients }: Props) => {
-    const [accounts, setAccounts] = useState<Array<AccountType>>([]);
+    const [accounts, setAccounts] = useState<Array<AccountReport>>([]);
 
     useEffect(() => {
         axios.post(BACKEND_URL + "/down", {
             keys: clients.map(client => client + "$account$")
         }).then(function(rsp) {
-            let _accounts: Array<AccountType> = rsp.data.data;
+            let _accounts: Array<AccountReport> = rsp.data.data;
             setAccounts(_accounts);
         }).catch(function (err) {
             console.log(err);

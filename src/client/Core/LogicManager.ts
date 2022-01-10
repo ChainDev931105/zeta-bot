@@ -40,6 +40,15 @@ export class LogicManager {
     static Deinit(): void {
     }
 
+    static SetParams(sLogic: string, lstParamsparams: Array<Array<string>>): void {
+        let logic: Logic | undefined = this.g_logics.get(sLogic);
+        if (logic !== undefined) {
+            lstParamsparams.forEach(param => {
+                logic?.SetParam(param[0], param[1]);
+            })
+        }
+    }
+
     static reportLogics(): void {
         if (this.g_nLastReportedLogic >= this.g_logics.size) {
             if (this.g_logics.size < 1) return;
@@ -53,6 +62,9 @@ export class LogicManager {
 
     static reportLogic(logic: Logic): void {
         Setting.Report("logic", logic.m_logicConfig.logic_id, {
+            params: logic.GetParamList(),
+            products: logic.m_logicConfig.products,
+            logic_type: logic.m_logicConfig.logic_type
         });
     }
 }
