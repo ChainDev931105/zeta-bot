@@ -16,6 +16,12 @@ type LogicReport = {
     }
 };
 
+const MANUAL_ORDER_TYPES: Array<string> = [
+    "Market",
+    "Limit",
+    "TWAP"
+];
+
 export const LogicList = ({ clients }: Props) => {
     const [logics, setLogics] = useState<Array<LogicReport>>([]);
     const [paramModalOpen, setParamModalOpen] = useState(false);
@@ -32,18 +38,20 @@ export const LogicList = ({ clients }: Props) => {
         }).catch(function (err) {
             console.log(err);
         });
-    }, []);
+    }, [paramModalOpen]);
 
     const setParams = () => {
         console.log("paramCache = ", paramCache);
-        axios.post(BACKEND_URL + "/set_param", {
-            logic_key: activeLogic?.key,
-            data: paramCache
-        }).then(function(rsp) {
+        if (Object.keys(paramCache).length > 0) {
+            axios.post(BACKEND_URL + "/set_param", {
+                logic_key: activeLogic?.key,
+                data: paramCache
+            }).then(function(rsp) {
 
-        }).catch(function(err) {
-            console.log(err);
-        });
+            }).catch(function(err) {
+                console.log(err);
+            });
+        }
         setParamModalOpen(false);
     }
 
@@ -64,19 +72,39 @@ export const LogicList = ({ clients }: Props) => {
         setParamCache({});
         setParamModalOpen(false);
     }
+
+    const onSubmitOrder = (event: any) => {
+        axios.post(BACKEND_URL + "/set_order", {
+            logic_key: activeLogic?.key,
+            data: {
+                product: event.target.product.value,
+                cmd: event.target.cmd.value,
+                lots: event.target.lots.value,
+                price: event.target.price.value,
+                type: event.target.type.value
+            }
+        }).then(function(rsp) {
+
+        }).catch(function(err) {
+            console.log(err);
+        });
+        setOrderModalOpen(false);
+    }
     
     return (
         <div>
             <table>
                 <tr>
+                    <td>Client</td>
                     <td>LogicID</td>
                     <td>LogicType</td>
                     <td></td>
                 </tr>
                 {logics && logics.map(logic => (
                     <tr>
+                        <td>{logic.key.split('$')[0]}</td>
                         <td>{logic.key.split('$')[2]}</td>
-                        <td></td>
+                        <td>{logic.data.logic_type}</td>
                         <td>
                             <button onClick={() => {
                                 setActiveLogic({...logic});
@@ -87,7 +115,7 @@ export const LogicList = ({ clients }: Props) => {
                                 setActiveLogic({...logic});
                                 setParamModalOpen(true);
                                 console.log(activeLogic, Object.keys(activeLogic?.data.params));
-                            }}>Set Parameter</button>
+                            }}>Parameters</button>
                         </td>
                     </tr>
                 ))}
@@ -111,7 +139,7 @@ export const LogicList = ({ clients }: Props) => {
                             </tr>
                         )})}
                     </table>
-                    <button onClick={setParams}>OK</button>
+                    <button onClick={setParams}>Update</button>
                     <button onClick={onCloseParamModal}>Cancel</button>
                 </div>
             </Modal>
@@ -120,9 +148,39 @@ export const LogicList = ({ clients }: Props) => {
                 onRequestClose={() => setOrderModalOpen(false)}
                 style={styles.modalBox}
             >
-                <div>
-                    Hello
-                </div>
+                <form onSubmit={onSubmitOrder}>
+                    <label>Symbol : </label>
+                    <select name="product">
+                        {activeLogic?.data.products.map((product, id) => (
+                            <option value={`${product[0]}_${product[1]}`} key={id} selected={id===0}>
+                                {`${product[0]}_${product[1]}`}
+                            </option>
+                        ))}
+                    </select>
+                    <br />
+                    <label>Lots : </label>
+                    <input name="lots" type="number" step="0.00001"/>
+                    <br />
+                    <label>Price : </label>
+                    <input name="price" type="number" step="0.00000000001"/>
+                    <br />
+                    <label>Buy/Sell : </label>
+                    <select name="cmd">
+                        <option value={"Buy"} selected>{"Buy"}</option>
+                        <option value={"Sell"}>{"Sell"}</option>
+                    </select>
+                    <br />
+                    <label>Type : </label>
+                    <select name="type">
+                        {MANUAL_ORDER_TYPES.map((tp, id) => (
+                            <option value={tp} key={id} selected={id===0}>
+                                {tp}
+                            </option>
+                        ))}
+                    </select>
+                    <input type="submit" value="Submit" />
+                    <button onClick={() => setOrderModalOpen(false)}>Cancel</button>
+                </form>
             </Modal>
         </div>
     )

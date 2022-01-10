@@ -10,7 +10,8 @@ export enum ORDER_COMMAND {
 export enum ORDER_KIND {
     Market = 0,
     Limit = 1,
-    Slippage = 2
+    Slippage = 2,
+    TWAP = 3
 }
 
 export enum ORDER_ACCEPT {

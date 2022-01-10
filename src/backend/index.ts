@@ -10,7 +10,7 @@ require('dotenv').config()
 const PORT = process.env.BACKEND_PORT;
 const app = expressWs(express()).app;
 const reportManager: ReportManager = new ReportManager();
-let sendDownWSMsg: ((sMsg: string) => void) | undefined = undefined;
+let lstWS: Array<any> = [];
 
 ConfigManager.Load();
 
@@ -55,14 +55,37 @@ app.post("/set_param", function (req: any, res: any) {
     console.log("/set_param", { reqBody });
     let data: any = reqBody["data"];
     let logic_key: string = reqBody["logic_key"];
-    console.log(data);
-    sendDownWSMsg && sendDownWSMsg(JSON.stringify({
-        command: "param",
-        data: {
-            logic_key: logic_key,
-            params: data
+    lstWS.forEach(ws => {
+        try {
+            ws.send(JSON.stringify({
+                command: "param",
+                data: {
+                    logic_key: logic_key,
+                    params: data
+                }
+            }));
         }
-    }));
+        catch {}
+    });
+    res.json({
+        success: true
+    });
+});
+
+app.post("/set_order", function (req: any, res: any) {
+    let reqBody: any = req.body;
+    console.log("/set_order", { reqBody });
+    let data: any = reqBody["data"];
+    data["logic_key"] = reqBody["logic_key"];
+    lstWS.forEach(ws => {
+        try {
+            ws.send(JSON.stringify({
+                command: "order",
+                data: data
+            }));
+        }
+        catch {}
+    });
     res.json({
         success: true
     });
@@ -80,6 +103,7 @@ app.ws('/up', function(ws, req) {
             console.log(" --ws-- up unexpected message : ", msg);
         }
     });
+    lstWS.push(ws);
 });
 
 app.ws('/down', function(ws, req) {

@@ -83,6 +83,7 @@ export class Setting {
     }
 
     private static onReceiveWS: ((jMsg: object) => void) = (jMsg: any) => {
+        TradeManager.PutLog("onReceiveWS: " + JSON.stringify(jMsg));
         try {
             let cmd: string = jMsg["command"];
             if (cmd === "param") {
@@ -93,6 +94,15 @@ export class Setting {
                 let sLogic: string = logic_key.split('$')[2];
                 let lstParamsparams: Array<Array<string>> = Object.keys(params).map(param => [param, params[param]]);
                 LogicManager.SetParams(sLogic, lstParamsparams);
+            }
+            else if (cmd === "order") {
+                let jData: any = jMsg["data"];
+                let {logic_key, product, cmd, lots, price, type} = jData;
+                let sClient: string = logic_key.split('$')[0];
+                if (sClient != this.g_sClientName) return;
+                let sLogic: string = logic_key.split('$')[2];
+                console.log(jData);
+                LogicManager.SetOrder(sLogic, product, cmd, lots, price, type);
             }
         }
         catch {}

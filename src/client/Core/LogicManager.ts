@@ -1,6 +1,8 @@
+import { ORDER_COMMAND, ORDER_KIND } from "../Global";
 import { Logic, CreateLogic } from "../Logics";
 import { UTimer } from "../Utils";
-import { Setting, TradeManager } from "./";
+import { Symbol } from "../Global";
+import { AccountManager, Setting, TradeManager } from "./";
 
 export class LogicManager {
     static g_logics: Map<string, Logic> = new Map<string, Logic>();
@@ -44,8 +46,25 @@ export class LogicManager {
         let logic: Logic | undefined = this.g_logics.get(sLogic);
         if (logic !== undefined) {
             lstParamsparams.forEach(param => {
+                TradeManager.PutLog(`SetParam(${sLogic}, ${param[0]}, ${param[1]}`);
                 logic?.SetParam(param[0], param[1]);
-            })
+            });
+        }
+    }
+
+    static SetOrder(sLogic: string, _product: string, _cmd: string, _lots: string, _price: string, _type: string): void {
+        let logic: Logic | undefined = this.g_logics.get(sLogic);
+        if (logic !== undefined) {
+            let product: Symbol | undefined = logic.FindSymbol(_product);
+            if (product === undefined) {
+                TradeManager.PutLog("SetOrder undefined product" + _product);
+                return;
+            }
+            let eCmd: ORDER_COMMAND = (<any>ORDER_COMMAND)[_cmd];
+            let dLots: Number = Number.parseFloat(_lots);
+            let dPrice: Number = Number.parseFloat(_price);
+            let eType: ORDER_KIND = (<any>ORDER_KIND)[_type];
+            logic.SetManualOrder(product, eCmd, dLots, dPrice, eType);
         }
     }
 

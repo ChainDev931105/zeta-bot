@@ -1,7 +1,7 @@
 import { LogicConfig } from "../../common/config";
 import { AccountManager, OrderManager, TradeManager } from "../Core";
 //import { AccountManager } from "../Core";
-import { ORDER_ACCEPT, ROrder, Symbol, ZERO_TIME } from "../Global";
+import { ORDER_ACCEPT, ORDER_COMMAND, ORDER_KIND, ROrder, Symbol, ZERO_TIME } from "../Global";
 import { RATE_CACHE_SIZE, RATE_DIR, RATE_RECORD_PERIOD_MS } from "../Global/Constants";
 import { DateToStr, UFile } from "../Utils";
 
@@ -67,6 +67,18 @@ export class Logic {
         return bSuccess;
     }
 
+    SetManualOrder(product: Symbol, eCmd: ORDER_COMMAND, dLots: Number, dPrice: Number, eType: ORDER_KIND): void {
+        TradeManager.PutLog([
+            "<ManualOrder>",
+            this.m_logicConfig.logic_id,
+            product.m_sSymbolName,
+            eCmd,
+            dLots,
+            dPrice,
+            eType
+        ].join(' '));
+    }
+
     OnTick(): Boolean {
         if (this.ex_sRateFolder.length > 0) {
             this.recordRate();
@@ -81,6 +93,16 @@ export class Logic {
             rlt[sName] = this.m_dicParam.get(sName);
         });
         return rlt;
+    }
+
+    FindSymbol(sProduct: string): Symbol | undefined {
+        let symbol: Symbol | undefined = undefined;
+        this.m_lstProdut.forEach(product => {
+            if (product.m_site.m_siteConfig.account_id + "_" + product.m_sSymbolName === sProduct) {
+                symbol = product;
+            }
+        });
+        return symbol;
     }
 
     protected CheckProcessing(): Boolean {
