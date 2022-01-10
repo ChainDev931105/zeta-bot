@@ -33,11 +33,11 @@ export class HuobiSite extends Site {
             );
     }
 
-    R_Init(): Boolean {
+    override R_Init(): Boolean {
         return super.R_Init();
     }
 
-    R_Login(): Boolean {
+    override R_Login(): Boolean {
         this.m_websocketRate.Open();
         this.m_symbols.forEach(symbol => {
             this.m_websocketRate.SendJson({
@@ -68,17 +68,17 @@ export class HuobiSite extends Site {
         return super.R_Login();
     }
 
-    R_Logout(): void {
+    override R_Logout(): void {
         this.m_websocketRate.Close();
         this.m_websocketAccount.Close();
         super.R_Logout();
     }
 
-    R_OnTick(): Boolean {
+    override R_OnTick(): Boolean {
         return super.R_OnTick();
     }
 
-    R_UpdatePosInfo(): void {
+    override R_UpdatePosInfo(): void {
         this.m_huobiRestAPI?.get(URL_ACC_INFO.replace("{account-id}", this.m_accountID)).then(res => {
             if (res["status"] === "ok") {
                 let balances: Array<any> = (res["data"]["list"]);
@@ -98,7 +98,7 @@ export class HuobiSite extends Site {
         super.R_UpdatePosInfo();
     }
 
-    R_OrderSend(rOrder: ROrder): Boolean {
+    override R_OrderSend(rOrder: ROrder): Boolean {
         if (!super.R_OrderSend(rOrder)) return false;
         let sType: string = "";
         if (rOrder.m_eCmd === ORDER_COMMAND.Buy || rOrder.m_eCmd === ORDER_COMMAND.SellClose) sType = "buy-";

@@ -8,7 +8,7 @@ export class DemoSite extends Site {
         super();
     }
 
-    R_Login(): Boolean {
+    override R_Login(): Boolean {
         this.m_TimerRate = setInterval(() => {
             this.m_symbols.forEach(symbol => {
                 let dAsk = (symbol.Ask() === 0) ? ((Math.random() + 1) * (Math.random() + 1) * (Math.random() + 1) * 1000) : symbol.Ask();
@@ -22,12 +22,12 @@ export class DemoSite extends Site {
         return super.R_Login();
     }
 
-    R_Logout(): void {
+    override R_Logout(): void {
         if (this.m_TimerRate !== null) clearInterval(this.m_TimerRate);
         super.R_Logout();
     }
 
-    R_OrderSend(rOrder: ROrder): Boolean {
+    override R_OrderSend(rOrder: ROrder): Boolean {
         if (!super.R_OrderSend(rOrder)) return false;
         let sType: string = "";
         if (rOrder.m_eCmd === ORDER_COMMAND.Buy || rOrder.m_eCmd === ORDER_COMMAND.SellClose) sType = "buy-";

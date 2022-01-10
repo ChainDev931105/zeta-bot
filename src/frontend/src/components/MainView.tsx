@@ -31,7 +31,7 @@ export const MainView = () => {
         <div>
             <div>
                 {PAGES.map(page => (
-                    <button onClick={() => setActivepage(page)}>{page}</button>
+                    <button onClick={() => setActivepage(page)} key={page}>{page}</button>
                 ))}
             </div>
             <div>

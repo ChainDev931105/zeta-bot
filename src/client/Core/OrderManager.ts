@@ -44,10 +44,12 @@ export class OrderManager {
             if (dExcLots > EP) {
                 rOrder.m_dExcPrice = (rOrder.m_dExcPrice * rOrder.m_dExcLots + dExcTotPrice) / (rOrder.m_dExcLots + dExcLots);
                 rOrder.m_dExcLots += dExcLots;
-                rOrder.m_dtExcTime = new Date();
-                this.recordOrder(rOrder);
-                this.g_procOrders.delete(sMagicNumber);
             }
+            rOrder.m_dtExcTime = new Date();
+            this.recordOrder(rOrder);
+            rOrder.m_symbol.CounterMinus();
+            this.g_procOrders.delete(sMagicNumber);
+            rOrder.m_logic?.OnOrderFinish(rOrder);
         }
     }
 

@@ -1,6 +1,5 @@
 import { LogicConfig } from "../../common/config";
 import { AccountManager, OrderManager, TradeManager } from "../Core";
-//import { AccountManager } from "../Core";
 import { ORDER_ACCEPT, ORDER_COMMAND, ORDER_KIND, ROrder, Symbol, ZERO_TIME } from "../Global";
 import { RATE_CACHE_SIZE, RATE_DIR, RATE_RECORD_PERIOD_MS } from "../Global/Constants";
 import { DateToStr, UFile } from "../Utils";
@@ -103,6 +102,9 @@ export class Logic {
             }
         });
         return symbol;
+    }
+
+    OnOrderFinish: ((rOrder: ROrder) => void) = (rOrder: ROrder) => {
     }
 
     protected CheckProcessing(): Boolean {

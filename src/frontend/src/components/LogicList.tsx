@@ -101,7 +101,7 @@ export const LogicList = ({ clients }: Props) => {
                     <td></td>
                 </tr>
                 {logics && logics.map(logic => (
-                    <tr>
+                    <tr key={logic.key}>
                         <td>{logic.key.split('$')[0]}</td>
                         <td>{logic.key.split('$')[2]}</td>
                         <td>{logic.data.logic_type}</td>
@@ -109,12 +109,10 @@ export const LogicList = ({ clients }: Props) => {
                             <button onClick={() => {
                                 setActiveLogic({...logic});
                                 setOrderModalOpen(true);
-                                console.log(activeLogic, Object.keys(activeLogic?.data.params));
                             }}>Manual Order</button>
                             <button onClick={() => {
                                 setActiveLogic({...logic});
                                 setParamModalOpen(true);
-                                console.log(activeLogic, Object.keys(activeLogic?.data.params));
                             }}>Parameters</button>
                         </td>
                     </tr>
@@ -133,7 +131,7 @@ export const LogicList = ({ clients }: Props) => {
                         </tr>
                         {(activeLogic !== null) && Object.keys(activeLogic.data.params).map(sName => {
                             return (
-                            <tr>
+                            <tr key={sName}>
                                 <td>{sName}</td>
                                 <td><input type="text" value={activeLogic.data.params[sName]} onChange={(event) => onParamChange(event, sName)}/></td>
                             </tr>
@@ -159,10 +157,10 @@ export const LogicList = ({ clients }: Props) => {
                     </select>
                     <br />
                     <label>Lots : </label>
-                    <input name="lots" type="number" step="0.00001"/>
+                    <input name="lots" type="number" step="0.00001" defaultValue={"0"} />
                     <br />
                     <label>Price : </label>
-                    <input name="price" type="number" step="0.00000000001"/>
+                    <input name="price" type="number" step="0.00000000001" defaultValue={"0"} />
                     <br />
                     <label>Buy/Sell : </label>
                     <select name="cmd">
@@ -178,6 +176,8 @@ export const LogicList = ({ clients }: Props) => {
                             </option>
                         ))}
                     </select>
+                    <br />
+                    <br />
                     <input type="submit" value="Submit" />
                     <button onClick={() => setOrderModalOpen(false)}>Cancel</button>
                 </form>
