@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.0] 2021-01-11
+- Implement TWAPLogic
+- Start to implement SerumSite, getting price part is done
+
 ## [0.2.9] 2021-01-10
 - Add ManualOrder (*front* -> *backend* -> *client*)
 
