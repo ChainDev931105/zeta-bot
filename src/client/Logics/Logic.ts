@@ -104,6 +104,10 @@ export class Logic {
         return symbol;
     }
 
+    AddtionalReport(): any {
+        return {};
+    }
+
     OnOrderFinish: ((rOrder: ROrder) => void) = (rOrder: ROrder) => {
     }
 

@@ -67,6 +67,10 @@ export class Symbol {
         return this.m_dRealLots;
     }
 
+    GetWholeSymbol(): string {
+        return this.m_site.m_siteConfig.account_id + "_" + this.m_sSymbolName;
+    }
+
     IsWorkTime(): Boolean {
         return true;
     }

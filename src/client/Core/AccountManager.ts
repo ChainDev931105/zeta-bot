@@ -104,7 +104,7 @@ export class AccountManager {
     }
 
     private static reportSymbol(symbol: Symbol): void {
-        Setting.Report("symbol", symbol.m_site.m_siteConfig.account_id + "_" + symbol.m_sSymbolName, {
+        Setting.Report("symbol", symbol.GetWholeSymbol(), {
             rate: {
                 ask: symbol.Ask(),
                 bid: symbol.Bid(),

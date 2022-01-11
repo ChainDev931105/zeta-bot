@@ -83,7 +83,8 @@ export class LogicManager {
         Setting.Report("logic", logic.m_logicConfig.logic_id, {
             params: logic.GetParamList(),
             products: logic.m_logicConfig.products,
-            logic_type: logic.m_logicConfig.logic_type
+            logic_type: logic.m_logicConfig.logic_type,
+            additional_report: logic.AddtionalReport()
         });
     }
 }

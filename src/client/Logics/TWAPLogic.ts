@@ -49,8 +49,8 @@ export class TWAPLogic extends Logic {
         
         // filter finished orders
         this.m_lstFinishedTWAPOrder = this.m_lstFinishedTWAPOrder.concat(
-            this.m_lstTWAPOrder.filter(twapOrder => twapOrder.Finished()));
-        this.m_lstTWAPOrder = this.m_lstTWAPOrder.filter(twapOrder => !twapOrder.Finished());
+            this.m_lstTWAPOrder.filter(twapOrder => twapOrder.IsFinished()));
+        this.m_lstTWAPOrder = this.m_lstTWAPOrder.filter(twapOrder => !twapOrder.IsFinished());
 
         this.m_lstTWAPOrder.forEach(twapOrder => {
             if (twapOrder.Active()) {
@@ -71,6 +71,12 @@ export class TWAPLogic extends Logic {
         });
         super.OnOrderFinish(rOrder);
     }
+
+    override AddtionalReport(): any {
+        let finishedOrders = this.m_lstFinishedTWAPOrder.map(twapOrder => twapOrder.Report());
+        let processingOrders = this.m_lstTWAPOrder.map(twapOrder => twapOrder.Report());
+        return {...super.AddtionalReport, finishedOrders, processingOrders};
+    }
 }
 
 class TWAPOrder {
@@ -81,6 +87,7 @@ class TWAPOrder {
     eKind: ORDER_KIND;
     dLotsUnit: number;
     timer: UTimer;
+    dtStarted: Date;
     
     dTotExcLots: number = 0;
     dTotExcPrice: number = 0;
@@ -104,18 +111,20 @@ class TWAPOrder {
         this.eKind = _eKind;
         this.dLotsUnit = _dLotsUnit;
         this.timer = new UTimer(_nOrderDelay);
+        this.dtStarted = ZERO_TIME;
     }
 
     Start(): void {
         this.bStarted = true;
         this.timer.m_dtLast = ZERO_TIME;
+        this.dtStarted = new Date();
     }
 
     Active(): Boolean {
         return this.bStarted && !this.bFinished && (this.dRemainLots > EP) && this.timer.Check();
     }
 
-    Finished(): Boolean {
+    IsFinished(): Boolean {
         if (this.dRemainLots < EP) this.bFinished = true;
         return this.bFinished;
     }
@@ -136,5 +145,23 @@ class TWAPOrder {
         this.dTotExcPrice += rOrder.m_dExcPrice * rOrder.m_dExcLots;
         this.dRemainLots -= rOrder.m_dExcLots;
         if (this.dRemainLots < EP) this.bFinished = true;
+    }
+
+    Report(): any {
+        return {
+            symbol: this.product.GetWholeSymbol(),
+            command: this.eCmd,
+            remainLots: this.dRemainLots,
+            limitPrice: this.dLimitPrice,
+            kind: this.eKind,
+            lotsUnit: this.dLotsUnit,
+            totExcLots: this.dTotExcLots,
+            totExcPrice: this.dTotExcPrice,
+            subOrders: this.lstSubOrder.map(subOrder => ({
+                lots: subOrder.m_dExcLots,
+                price: subOrder.m_dExcPrice,
+                time: subOrder.m_dtExcTime
+            }))
+        };
     }
 }
