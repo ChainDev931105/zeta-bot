@@ -61,8 +61,8 @@ export class LogicManager {
                 return;
             }
             let eCmd: ORDER_COMMAND = (<any>ORDER_COMMAND)[_cmd];
-            let dLots: Number = Number.parseFloat(_lots);
-            let dPrice: Number = Number.parseFloat(_price);
+            let dLots: number = Number.parseFloat(_lots);
+            let dPrice: number = Number.parseFloat(_price);
             let eType: ORDER_KIND = (<any>ORDER_KIND)[_type];
             logic.SetManualOrder(product, eCmd, dLots, dPrice, eType);
         }

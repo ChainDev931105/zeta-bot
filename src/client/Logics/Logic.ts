@@ -15,10 +15,10 @@ export class Logic {
     m_dtLastRateRecord: Date = ZERO_TIME;
 
     ex_sRateFolder: string = "";
-    ex_dLots: Number = 0;
-    ex_nNewOrderCnt: Number = 0;
+    ex_dLots: number = 0;
+    ex_nNewOrderCnt: number = 0;
     ex_eOrderAccept: ORDER_ACCEPT = ORDER_ACCEPT.StopOrder;
-    ex_nStepCnt: Number = 1;
+    ex_nStepCnt: number = 1;
 
     constructor() {
         this.m_dicParam.clear();
@@ -66,7 +66,7 @@ export class Logic {
         return bSuccess;
     }
 
-    SetManualOrder(product: Symbol, eCmd: ORDER_COMMAND, dLots: Number, dPrice: Number, eType: ORDER_KIND): void {
+    SetManualOrder(product: Symbol, eCmd: ORDER_COMMAND, dLots: number, dPrice: number, eKind: ORDER_KIND): void {
         TradeManager.PutLog([
             "<ManualOrder>",
             this.m_logicConfig.logic_id,
@@ -74,7 +74,7 @@ export class Logic {
             eCmd,
             dLots,
             dPrice,
-            eType
+            eKind
         ].join(' '));
     }
 
