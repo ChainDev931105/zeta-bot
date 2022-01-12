@@ -69,7 +69,6 @@ export class Site {
     }*/
 
     OnRateUpdate(sSymbol: string, dAsk: number, dBid: number, dAskVolume: number = 1, dBidVolume: number = 1): void {
-        console.log(sSymbol, dAsk, dBid, dAskVolume, dBidVolume);
         this.m_symbols.get(sSymbol)?.SetRate(dAsk, dBid, dAskVolume, dBidVolume);
     }
 

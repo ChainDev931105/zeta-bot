@@ -21,15 +21,15 @@ export class HuobiSite extends Site {
         super();
         this.m_websocketRate = new UWebsocket(
             WS_URL_BASE,
-            null,
-            this.onWSReceive,
-            this.onWSError
+            null, 
+            this.onWSReceive, 
+            this.onWSError 
             );
         this.m_websocketAccount = new UWebsocket(
             WS_URL_ACCOUNT,
-            null,
-            this.onWSReceiveAcc,
-            this.onWSError
+            null, 
+            this.onWSReceiveAcc, 
+            this.onWSError 
             );
     }
 
