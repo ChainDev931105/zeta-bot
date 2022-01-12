@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.3.1] 2021-01-12
+- Update SerumSite (Order part, Account info)
+
 ## [0.3.0] 2021-01-11
 - Implement TWAPLogic
 - Start to implement SerumSite, getting price part is done
