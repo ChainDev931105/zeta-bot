@@ -1,7 +1,8 @@
-import { Connection, PublicKey } from '@solana/web3.js';
+import { Account, Connection, PublicKey } from '@solana/web3.js';
 import { Market, MARKETS } from '@project-serum/serum';
 import { Site } from './Site'
 import { UWebsocket } from '../Utils';
+import { ORDER_COMMAND, ORDER_KIND, ROrder } from '../Global';
 
 const WS_URL_REAL: string = "wss://api.serum-vial.dev/v1/ws";
 const WS_URL_DEMO: string = "wss://api.serum-vial.dev/v1/ws";
@@ -15,6 +16,8 @@ const PROGRAM_ADDRESS_DEMO: string = "DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmr
 export class SerumSite extends Site {
     m_websocket: UWebsocket | undefined;
     m_markets: Map<string, Market> = new Map<string, Market>();
+    m_connection: Connection = new Connection("");
+    m_orderIDs: Map<string, Boolean> = new Map<string, Boolean>();
 
     constructor() {
         super();
@@ -41,7 +44,7 @@ export class SerumSite extends Site {
             });
         }
 
-        let connection = new Connection(this.isReal() ? URL_CONNECTION_REAL : URL_CONNECTION_DEMO);
+        this.m_connection = new Connection(this.isReal() ? URL_CONNECTION_REAL : URL_CONNECTION_DEMO);
         let programId = new PublicKey(this.isReal() ? PROGRAM_ADDRESS_REAL : PROGRAM_ADDRESS_DEMO);
         let bRlt = true;
         this.m_symbols.forEach(symbol => {
@@ -52,7 +55,7 @@ export class SerumSite extends Site {
                 bRlt = false;
                 return;
             }
-            Market.load(connection, marketInfo.address, {}, programId).then(market => {
+            Market.load(this.m_connection, marketInfo.address, {}, programId).then(market => {
                 this.m_markets.set(symbol.m_sSymbolName, market);
                 console.log(symbol.m_sSymbolName, market);
             });
@@ -61,6 +64,50 @@ export class SerumSite extends Site {
         if (!bRlt) return false;
 
         return super.R_Login();
+    }
+
+    override R_Logout(): void {
+        this.m_websocket?.Close();
+        super.R_Logout();
+    }
+
+    override R_OnTick(): Boolean {
+        return super.R_OnTick();
+    }
+    
+    override R_UpdatePosInfo(): void {
+        this.m_markets.forEach((market, sSymbol) => {
+            market.loadFills(this.m_connection).then(fills => {
+                fills.forEach(fill => {
+                    if (this.m_orderIDs.has(fill.orderID)) {
+                        super.OnOrderUpdate(sSymbol, fill.size, fill.price);
+                        this.m_orderIDs.delete(fill.orderID);
+                    }
+                });
+            });
+        });
+        super.R_UpdatePosInfo();
+    }
+
+    override R_OrderSend(rOrder: ROrder): Boolean {
+        if (!super.R_OrderSend(rOrder)) return false;
+
+        let market: Market | undefined = this.m_markets.get(rOrder.m_symbol.m_sSymbolName);
+        if (market === undefined) return false;
+        let owner: Account = new Account(); // TODO
+        let payer: PublicKey = new PublicKey("");
+
+        market.placeOrder(this.m_connection, {
+            owner,
+            payer,
+            side: (rOrder.m_eCmd === ORDER_COMMAND.Buy || rOrder.m_eCmd === ORDER_COMMAND.SellClose) ? 'buy' : 'sell', // 'buy' or 'sell'
+            price: rOrder.m_dSigPrice,
+            size: rOrder.m_dSigLots,
+            orderType: rOrder.m_eKind === ORDER_KIND.Limit ? 'limit' : 'ioc', // 'limit', 'ioc', 'postOnly'
+        }).then(rlt => {
+            this.PutSiteLog("Order Response: " + JSON.stringify(rlt));
+        });
+        return true;
     }
 
     private isReal() {
