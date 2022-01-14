@@ -1,4 +1,5 @@
-import { Account, Connection, PublicKey } from '@solana/web3.js';
+import { Account, Keypair, Connection, PublicKey } from '@solana/web3.js';
+import { Wallet } from "@project-serum/anchor";
 import { Market, MARKETS } from '@project-serum/serum';
 import { Site } from './Site'
 import { UWebsocket } from '../Utils';
@@ -8,15 +9,18 @@ const WS_URL_REAL: string = "wss://api.serum-vial.dev/v1/ws";
 const WS_URL_DEMO: string = "wss://api.serum-vial.dev/v1/ws";
 
 const URL_CONNECTION_REAL: string = "https://solana-api.projectserum.com";
-const URL_CONNECTION_DEMO: string = "";
+const URL_CONNECTION_DEMO: string = "https://testnet.solana.com";
 
 const PROGRAM_ADDRESS_REAL: string = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin";
 const PROGRAM_ADDRESS_DEMO: string = "DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY";
 
 export class SerumSite extends Site {
     m_websocket: UWebsocket | undefined;
+    m_wallet: Wallet | undefined;
+    m_owner: Account | undefined;
     m_markets: Map<string, Market> = new Map<string, Market>();
-    m_connection: Connection = new Connection("");
+    m_tokenAccounts: Map<string, PublicKey> = new Map<string, PublicKey>();
+    m_connection: Connection | undefined;
     m_orderIDs: Map<string, Boolean> = new Map<string, Boolean>();
 
     constructor() {
@@ -35,6 +39,18 @@ export class SerumSite extends Site {
     }
 
     override R_Login(): Boolean {
+        let privateKey = Keypair.fromSecretKey(
+          new Uint8Array(JSON.parse(Buffer.from(this.m_siteConfig.password).toString()))
+        );
+        this.m_wallet = new Wallet(privateKey);
+
+        this.m_owner = new Account(
+            new Uint8Array(JSON.parse(Buffer.from(this.m_siteConfig.password).toString())));
+        if (this.m_siteConfig.username !== this.m_wallet.publicKey.toBase58()) {
+            this.PutSiteLog("Public Key is not matched");
+            return false;
+        }
+
         if (this.m_websocket && this.m_siteConfig.symbols.length > 0) {
             this.m_websocket.Open();
             this.m_websocket.SendJson({
@@ -55,13 +71,27 @@ export class SerumSite extends Site {
                 bRlt = false;
                 return;
             }
-            Market.load(this.m_connection, marketInfo.address, {}, programId).then(market => {
+            this.m_connection && Market.load(this.m_connection, marketInfo.address, {}, programId).then(market => {
                 this.m_markets.set(symbol.m_sSymbolName, market);
-                console.log(symbol.m_sSymbolName, market);
+            }).catch(err => {
+                bRlt = false;
             });
         });
-
-        if (!bRlt) return false;
+        this.m_symbols.forEach(symbol => {
+            let market = this.m_markets.get(symbol.m_sSymbolName);
+            market && this.m_wallet && this.m_connection && this.m_connection.getParsedTokenAccountsByOwner(
+                this.m_wallet.publicKey,
+                { mint: market.publicKey }
+            ).then(accounts => {
+                if (accounts.value.length < 1) bRlt = false;
+                else {
+                    this.PutSiteLog(accounts.value.map(el => ({pubkey: el.pubkey.toBase58(), data: JSON.stringify(el.account.data)})).toString());
+                    this.m_tokenAccounts.set(symbol.m_sSymbolName, accounts.value[0].pubkey);
+                }
+            }).catch(err => {
+                bRlt = false;
+            });
+        });
 
         return super.R_Login();
     }
@@ -74,10 +104,10 @@ export class SerumSite extends Site {
     override R_OnTick(): Boolean {
         return super.R_OnTick();
     }
-    
+
     override R_UpdatePosInfo(): void {
         this.m_markets.forEach((market, sSymbol) => {
-            market.loadFills(this.m_connection).then(fills => {
+            this.m_connection && market.loadFills(this.m_connection).then(fills => {
                 fills.forEach(fill => {
                     if (this.m_orderIDs.has(fill.orderID)) {
                         super.OnOrderUpdate(sSymbol, fill.size, fill.price);
@@ -93,12 +123,15 @@ export class SerumSite extends Site {
         if (!super.R_OrderSend(rOrder)) return false;
 
         let market: Market | undefined = this.m_markets.get(rOrder.m_symbol.m_sSymbolName);
-        if (market === undefined) return false;
-        let owner: Account = new Account(); // TODO
-        let payer: PublicKey = new PublicKey("");
+        let payer: PublicKey | undefined = this.m_tokenAccounts.get(rOrder.m_symbol.m_sSymbolName);
+
+        if (!this.m_owner || !this.m_connection || !market || !payer) {
+            this.PutSiteLog("undefined object");
+            return false;
+        }
 
         market.placeOrder(this.m_connection, {
-            owner,
+            owner: this.m_owner,
             payer,
             side: (rOrder.m_eCmd === ORDER_COMMAND.Buy || rOrder.m_eCmd === ORDER_COMMAND.SellClose) ? 'buy' : 'sell', // 'buy' or 'sell'
             price: rOrder.m_dSigPrice,

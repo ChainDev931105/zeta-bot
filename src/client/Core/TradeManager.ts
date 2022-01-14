@@ -60,7 +60,7 @@ export class TradeManager {
             this.deinit();
         }
         catch (e: any) {
-            this.PutLog("Exception in MainProcess: " + e.message);
+            this.PutLog("Exception in MainProcess: " + e.message + "\r\n" + e.stack);
             this.g_bRunning = false;
             this.deinit();
         }
