@@ -39,7 +39,7 @@ export class SerumSite extends Site {
     }
 
     override R_Login(): Boolean {
-        let privateKey = Keypair.fromSecretKey(
+        let privateKey: Keypair = Keypair.fromSecretKey(
           new Uint8Array(JSON.parse(Buffer.from(this.m_siteConfig.password).toString()))
         );
         this.m_wallet = new Wallet(privateKey);
@@ -63,11 +63,11 @@ export class SerumSite extends Site {
         this.PutSiteLog("login step 2");
 
         this.m_connection = new Connection(this.isReal() ? URL_CONNECTION_REAL : URL_CONNECTION_DEMO);
-        let programId = new PublicKey(this.isReal() ? PROGRAM_ADDRESS_REAL : PROGRAM_ADDRESS_DEMO);
+        let programId: PublicKey = new PublicKey(this.isReal() ? PROGRAM_ADDRESS_REAL : PROGRAM_ADDRESS_DEMO);
 
         this.PutSiteLog("login step 3 " + programId);
 
-        let bRlt = true;
+        let bRlt: Boolean = true;
         this.m_symbols.forEach(symbol => {
             let marketAddress: PublicKey | undefined = this.getMarketAddress(symbol);
             if (marketAddress === undefined) {
@@ -98,7 +98,6 @@ export class SerumSite extends Site {
                 bRlt = false;
             });
         });
-        if (!bRlt) return false;
         if (!bRlt) return false;
 
         return super.R_Login();
@@ -157,9 +156,6 @@ export class SerumSite extends Site {
 
     private getMarketAddress(symbol: Symbol): PublicKey | undefined {
         if (this.isReal()) {
-            let marketInfos = MARKETS.filter(market => (
-                market.name === symbol.m_sSymbolName
-            ));
             let programId = new PublicKey(PROGRAM_ADDRESS_REAL);
             let marketInfo = MARKETS.find(market => (
                 market.name === symbol.m_sSymbolName && market.programId.toBase58() === programId.toBase58()
@@ -190,6 +186,6 @@ export class SerumSite extends Site {
     }
 
     onWSError: ((sError: string) => void) = (sError: string) => {
-        super.PutSiteLog("Huobi error : " + sError);
+        super.PutSiteLog("Serum error : " + sError);
     }
 }
