@@ -25,6 +25,7 @@ export class Site {
         this.m_symbols.clear();
         this.m_siteConfig.symbols.forEach(symbol => {
             let sym: Symbol = new Symbol(this, symbol[0]);
+            sym.m_lstDetailInfo = symbol.slice(1);
             this.m_symbols.set(symbol[0], sym);
         });
         this.m_partOrders.clear();

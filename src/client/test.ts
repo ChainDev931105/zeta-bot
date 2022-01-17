@@ -12,7 +12,7 @@ const WS_URL_REAL: string = "wss://api.serum-vial.dev/v1/ws";
 const WS_URL_DEMO: string = "wss://api.serum-vial.dev/v1/ws";
 
 const URL_CONNECTION_REAL: string = "https://solana-api.projectserum.com";
-const URL_CONNECTION_DEMO: string = "https://testnet.solana.com";
+const URL_CONNECTION_DEMO: string = "https://api.testnet.solana.com";
 
 const PROGRAM_ADDRESS_REAL: string = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin";
 const PROGRAM_ADDRESS_DEMO: string = "DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY";
@@ -25,11 +25,11 @@ const PROGRAM_ADDRESS_DEMO: string = "DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmr
 
 // let m_owner: Account = new Account(new Uint8Array(JSON.parse(Buffer.from(PRIVATE_KEY).toString())));
 
-let m_connection: Connection = new Connection(URL_CONNECTION_REAL);
+let m_connection: Connection = new Connection(URL_CONNECTION_DEMO);
 
 m_connection.getParsedTokenAccountsByOwner(
-    new PublicKey("BXAj15Ze7Qs7kdPXDXTT5BeXP4RDL6UCeZHd79dBepfB"), 
-    {mint: new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v")}).then(rlt => {
+    new PublicKey("FxwTkPfkcb1gxgZAtLUqM92CBhNGDhMTJ8jksLUwMRa1"), 
+    {mint: new PublicKey("DGPuHEJmMqbG7ENmQmMESZpXs252DyUJgcb6TA1XBHLa")}).then(rlt => {
     console.log(rlt.value, rlt.value.map(el => ({pubkey: el.pubkey.toBase58(), data: JSON.stringify(el.account.data)})));
 }).catch(err => {
     console.log("error", err);

@@ -3,13 +3,13 @@ import { Wallet } from "@project-serum/anchor";
 import { Market, MARKETS } from '@project-serum/serum';
 import { Site } from './Site'
 import { UWebsocket } from '../Utils';
-import { ORDER_COMMAND, ORDER_KIND, ROrder } from '../Global';
+import { Symbol, ORDER_COMMAND, ORDER_KIND, ROrder } from '../Global';
 
 const WS_URL_REAL: string = "wss://api.serum-vial.dev/v1/ws";
 const WS_URL_DEMO: string = "wss://api.serum-vial.dev/v1/ws";
 
 const URL_CONNECTION_REAL: string = "https://solana-api.projectserum.com";
-const URL_CONNECTION_DEMO: string = "https://testnet.solana.com";
+const URL_CONNECTION_DEMO: string = "https://api.devnet.solana.com";
 
 const PROGRAM_ADDRESS_REAL: string = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin";
 const PROGRAM_ADDRESS_DEMO: string = "DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY";
@@ -47,9 +47,10 @@ export class SerumSite extends Site {
         this.m_owner = new Account(
             new Uint8Array(JSON.parse(Buffer.from(this.m_siteConfig.password).toString())));
         if (this.m_siteConfig.username !== this.m_wallet.publicKey.toBase58()) {
-            this.PutSiteLog("Public Key is not matched");
+            this.PutSiteLog("Public Key is not matched " + this.m_wallet.publicKey.toBase58());
             return false;
         }
+        this.PutSiteLog("login step 1");
 
         if (this.m_websocket && this.m_siteConfig.symbols.length > 0) {
             this.m_websocket.Open();
@@ -59,39 +60,46 @@ export class SerumSite extends Site {
                 markets: this.m_siteConfig.symbols.map(symbol => symbol[0])
             });
         }
+        this.PutSiteLog("login step 2");
 
         this.m_connection = new Connection(this.isReal() ? URL_CONNECTION_REAL : URL_CONNECTION_DEMO);
         let programId = new PublicKey(this.isReal() ? PROGRAM_ADDRESS_REAL : PROGRAM_ADDRESS_DEMO);
+
+        this.PutSiteLog("login step 3 " + programId);
+
         let bRlt = true;
         this.m_symbols.forEach(symbol => {
-            let marketInfo = MARKETS.find(market => (
-                market.name === symbol.m_sSymbolName && market.programId.toBase58() === programId.toBase58()
-            ));
-            if (marketInfo === undefined) {
+            let marketAddress: PublicKey | undefined = this.getMarketAddress(symbol);
+            if (marketAddress === undefined) {
                 bRlt = false;
                 return;
             }
-            this.m_connection && Market.load(this.m_connection, marketInfo.address, {}, programId).then(market => {
+            console.log("hello");
+            this.m_connection && Market.load(this.m_connection, marketAddress, {}, programId).then(market => {
                 this.m_markets.set(symbol.m_sSymbolName, market);
+                this.PutSiteLog(symbol.m_sSymbolName + " has valid market");
+
+                this.m_wallet && this.m_connection && this.m_connection.getParsedTokenAccountsByOwner(
+                    this.m_wallet.publicKey,
+                    { mint: market.publicKey }
+                ).then(accounts => {
+                    if (accounts.value.length < 1) bRlt = false;
+                    else {
+                        this.PutSiteLog(accounts.value.map(el => ({pubkey: el.pubkey.toBase58(), data: JSON.stringify(el.account.data)})).toString());
+                        this.m_tokenAccounts.set(symbol.m_sSymbolName, accounts.value[0].pubkey);
+                        this.PutSiteLog(symbol.m_sSymbolName + " is subscribed successfully");
+                    }
+                }).catch(err => {
+                    this.PutSiteLog("err2 " + err);
+                    bRlt = false;
+                });
             }).catch(err => {
+                this.PutSiteLog("err1 " + err);
                 bRlt = false;
             });
         });
-        this.m_symbols.forEach(symbol => {
-            let market = this.m_markets.get(symbol.m_sSymbolName);
-            market && this.m_wallet && this.m_connection && this.m_connection.getParsedTokenAccountsByOwner(
-                this.m_wallet.publicKey,
-                { mint: market.publicKey }
-            ).then(accounts => {
-                if (accounts.value.length < 1) bRlt = false;
-                else {
-                    this.PutSiteLog(accounts.value.map(el => ({pubkey: el.pubkey.toBase58(), data: JSON.stringify(el.account.data)})).toString());
-                    this.m_tokenAccounts.set(symbol.m_sSymbolName, accounts.value[0].pubkey);
-                }
-            }).catch(err => {
-                bRlt = false;
-            });
-        });
+        if (!bRlt) return false;
+        if (!bRlt) return false;
 
         return super.R_Login();
     }
@@ -145,6 +153,26 @@ export class SerumSite extends Site {
 
     private isReal() {
         return this.m_siteConfig.property.toLowerCase().includes("real");
+    }
+
+    private getMarketAddress(symbol: Symbol): PublicKey | undefined {
+        if (this.isReal()) {
+            let marketInfos = MARKETS.filter(market => (
+                market.name === symbol.m_sSymbolName
+            ));
+            let programId = new PublicKey(PROGRAM_ADDRESS_REAL);
+            let marketInfo = MARKETS.find(market => (
+                market.name === symbol.m_sSymbolName && market.programId.toBase58() === programId.toBase58()
+            ));
+            if (marketInfo === undefined) {
+                return undefined;
+            }
+            return marketInfo.address;
+        }
+        else {
+            if (symbol.m_lstDetailInfo.length < 1) return undefined;
+            return new PublicKey(symbol.m_lstDetailInfo[0]);
+        }
     }
 
     onWSReceive: ((jMsg: any) => void) = (jMsg: any) => {

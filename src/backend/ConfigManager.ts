@@ -89,11 +89,10 @@ export class ConfigManager {
         return { lstLogicConfig: [], lstSiteConfig: [] };
     }
 
-    static generateSiteConfig(account_id: string, lstSymbol: Array<string>): SiteConfig
-    {
+    static generateSiteConfig(account_id: string, lstSymbol: Array<string>): SiteConfig {
         let siteConfig: SiteConfig = new SiteConfig();
         siteConfig.account_id = account_id;
-        siteConfig.symbols = lstSymbol.map(symbol => [symbol]);
+        siteConfig.symbols = [];
 
         let jAccount: any | undefined = this.g_accounts.get(account_id);
         if (jAccount !== undefined) {
@@ -101,7 +100,21 @@ export class ConfigManager {
             if ("property" in jAccount) siteConfig.property= jAccount["property"];
             if ("username" in jAccount) siteConfig.username = jAccount["username"];
             if ("password" in jAccount) siteConfig.password = jAccount["password"];
+            if ("symbols" in jAccount) {
+                let jSymbols: Array<Array<string>> = jAccount["symbols"];
+                jSymbols.forEach(jSymbol => {
+                    if (lstSymbol.includes(jSymbol[0])) siteConfig.symbols.push(jSymbol);
+                });
+            }
         }
+        lstSymbol.forEach(symbol => {
+            let bExist = false;
+            siteConfig.symbols.forEach(sym => {
+                if (sym[0] === symbol) bExist = true;
+            });
+            if (!bExist) siteConfig.symbols.push([symbol]);
+        });
+
         return siteConfig;
     }
 
@@ -115,6 +128,7 @@ export class ConfigManager {
             let property: string = jAccount["property"];
             if (property && property.length > 0) site_type = site_type + ":" + property;
             if (!this.g_sites.has(site_type)) return sSymbol;
+            jSite = this.g_sites.get(site_type);
         }
         let jSymbolMap: any = jSite["symbol_map"];
         if (!jSymbolMap) return sSymbol;

@@ -41,6 +41,7 @@ export class Symbol {
 
     m_rate: Rate = new Rate();
     m_dRealLots: number = 0;
+    m_lstDetailInfo: Array<string> = [];
 
     private m_nCounter: number = 0;
 
