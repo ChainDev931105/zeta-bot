@@ -14,12 +14,15 @@ const URL_CONNECTION_DEMO: string = "https://api.devnet.solana.com";
 const PROGRAM_ADDRESS_REAL: string = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin";
 const PROGRAM_ADDRESS_DEMO: string = "DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY";
 
+const SOL_TOKEN : string = "So11111111111111111111111111111111111111112";
+
 export class SerumSite extends Site {
     m_websocket: UWebsocket | undefined;
     m_wallet: Wallet | undefined;
     m_owner: Account | undefined;
-    m_markets: Map<string, Market> = new Map<string, Market>();
-    m_tokenAccounts: Map<string, PublicKey> = new Map<string, PublicKey>();
+    m_markets: Map<string, Market> = new Map<string, Market>(); // BTC/USDC
+    m_baseTokenAccounts: Map<string, PublicKey> = new Map<string, PublicKey>(); // BTC
+    m_quoteTokenAccounts: Map<string, PublicKey> = new Map<string, PublicKey>(); // USDC
     m_connection: Connection | undefined;
     m_orderIDs: Map<string, Boolean> = new Map<string, Boolean>();
 
@@ -74,25 +77,56 @@ export class SerumSite extends Site {
                 bRlt = false;
                 return;
             }
-            console.log("hello");
+            this.m_connection && this.m_connection.getAccountInfo(marketAddress).then(rlt => {
+                console.log("pre result = ", rlt, rlt?.owner.toBase58());
+            });
+
             this.m_connection && Market.load(this.m_connection, marketAddress, {}, programId).then(market => {
                 this.m_markets.set(symbol.m_sSymbolName, market);
                 this.PutSiteLog(symbol.m_sSymbolName + " has valid market");
 
-                this.m_wallet && this.m_connection && this.m_connection.getParsedTokenAccountsByOwner(
-                    this.m_wallet.publicKey,
-                    { mint: market.publicKey }
-                ).then(accounts => {
-                    if (accounts.value.length < 1) bRlt = false;
-                    else {
-                        this.PutSiteLog(accounts.value.map(el => ({pubkey: el.pubkey.toBase58(), data: JSON.stringify(el.account.data)})).toString());
-                        this.m_tokenAccounts.set(symbol.m_sSymbolName, accounts.value[0].pubkey);
-                        this.PutSiteLog(symbol.m_sSymbolName + " is subscribed successfully");
-                    }
-                }).catch(err => {
-                    this.PutSiteLog("err2 " + err);
-                    bRlt = false;
-                });
+                if (symbol.m_lstDetailInfo[1] === SOL_TOKEN) {
+                    this.m_wallet && this.m_baseTokenAccounts.set(symbol.m_sSymbolName, this.m_wallet.publicKey);
+                    this.PutSiteLog(symbol.m_sSymbolName + " has valid base token account");
+                }
+                else {
+                    this.m_wallet && this.m_connection && this.m_connection.getParsedTokenAccountsByOwner(
+                        this.m_wallet.publicKey,
+                        { mint: new PublicKey(symbol.m_lstDetailInfo[1]) }
+                    ).then(accounts => {
+                        console.log("accounts = ", accounts);
+                        if (accounts.value.length < 1) bRlt = false;
+                        else {
+                            this.PutSiteLog(accounts.value.map(el => ({pubkey: el.pubkey.toBase58(), data: JSON.stringify(el.account.data)})).toString());
+                            this.m_baseTokenAccounts.set(symbol.m_sSymbolName, accounts.value[0].pubkey);
+                            this.PutSiteLog(symbol.m_sSymbolName + " has valid base token account");
+                        }
+                    }).catch(err => {
+                        this.PutSiteLog("err2 " + err);
+                        bRlt = false;
+                    });
+                }
+
+                if (symbol.m_lstDetailInfo[2] === SOL_TOKEN) {
+                    this.m_wallet && this.m_quoteTokenAccounts.set(symbol.m_sSymbolName, this.m_wallet.publicKey);
+                    this.PutSiteLog(symbol.m_sSymbolName + " has valid quote token account");
+                }
+                else {
+                    this.m_wallet && this.m_connection && this.m_connection.getParsedTokenAccountsByOwner(
+                        this.m_wallet.publicKey,
+                        { mint: new PublicKey(symbol.m_lstDetailInfo[2]) }
+                    ).then(accounts => {
+                        if (accounts.value.length < 1) bRlt = false;
+                        else {
+                            this.PutSiteLog(accounts.value.map(el => ({pubkey: el.pubkey.toBase58(), data: JSON.stringify(el.account.data)})).toString());
+                            this.m_quoteTokenAccounts.set(symbol.m_sSymbolName, accounts.value[0].pubkey);
+                            this.PutSiteLog(symbol.m_sSymbolName + " has valid quote token account");
+                        }
+                    }).catch(err => {
+                        this.PutSiteLog("err3 " + err);
+                        bRlt = false;
+                    });
+                }
             }).catch(err => {
                 this.PutSiteLog("err1 " + err);
                 bRlt = false;
@@ -130,7 +164,7 @@ export class SerumSite extends Site {
         if (!super.R_OrderSend(rOrder)) return false;
 
         let market: Market | undefined = this.m_markets.get(rOrder.m_symbol.m_sSymbolName);
-        let payer: PublicKey | undefined = this.m_tokenAccounts.get(rOrder.m_symbol.m_sSymbolName);
+        let payer: PublicKey | undefined = this.m_baseTokenAccounts.get(rOrder.m_symbol.m_sSymbolName);
 
         if (!this.m_owner || !this.m_connection || !market || !payer) {
             this.PutSiteLog("undefined object");
@@ -155,7 +189,7 @@ export class SerumSite extends Site {
     }
 
     private getMarketAddress(symbol: Symbol): PublicKey | undefined {
-        if (this.isReal()) {
+        if (false && this.isReal()) {
             let programId = new PublicKey(PROGRAM_ADDRESS_REAL);
             let marketInfo = MARKETS.find(market => (
                 market.name === symbol.m_sSymbolName && market.programId.toBase58() === programId.toBase58()
@@ -163,7 +197,7 @@ export class SerumSite extends Site {
             if (marketInfo === undefined) {
                 return undefined;
             }
-            return marketInfo.address;
+            return marketInfo?.address;
         }
         else {
             if (symbol.m_lstDetailInfo.length < 1) return undefined;

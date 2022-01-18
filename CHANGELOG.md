@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.2] 2021-01-16
+## [0.3.2] 2021-01-17
 - Update SerumSite Demo mode (Order part, Account info)
 - Update *server* Config Manager, as symbol detail information config
 
