@@ -43,7 +43,7 @@ export class Site {
         return true;
     }
 
-    R_UpdatePosInfo(): void {
+    async R_UpdatePosInfo() {
     }
 
     R_OrderSend(rOrder: ROrder): Boolean { // parent function should be called before child function
@@ -80,7 +80,7 @@ export class Site {
             sSymbol,
             dLots,
             dPrice
-        ].join(''));
+        ].join(" "));
         let partOrder: PartOrder | undefined = this.m_partOrders.get(sSymbol);
         if (partOrder !== undefined) {
             partOrder.dOrderLots += dLots;
@@ -106,7 +106,7 @@ export class Site {
         }
         else {
             this.PutSiteLog("Unexpected m_PartOrder");
-        }        
+        }
     }
 
     protected PutSiteLog(sLog: string): void {

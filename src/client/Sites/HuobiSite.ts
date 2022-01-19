@@ -78,23 +78,22 @@ export class HuobiSite extends Site {
         return super.R_OnTick();
     }
 
-    override R_UpdatePosInfo(): void {
-        this.m_huobiRestAPI?.get(URL_ACC_INFO.replace("{account-id}", this.m_accountID)).then(res => {
-            if (res["status"] === "ok") {
-                let balances: Array<any> = (res["data"]["list"]);
-                balances = balances.filter(balance => balance["balance"] > 0);
-                let balanceUSD = 0;
-                let marginUSD = 0;
-                balances.forEach(balance => {
-                    if (balance["currency"] === "usdt" || balance["currency"] === "usdc") {
-                        balanceUSD += balance["balance"];
-                    }
-                });
-                this.m_accountInfo.m_dBalance = balanceUSD;
-                this.m_accountInfo.m_dMargin = marginUSD;
-                this.m_accountInfo.m_subBalances = balances;
-            }
-        });
+    override async R_UpdatePosInfo() {
+        let res = await this.m_huobiRestAPI?.get(URL_ACC_INFO.replace("{account-id}", this.m_accountID));
+        if (res["status"] === "ok") {
+            let balances: Array<any> = (res["data"]["list"]);
+            balances = balances.filter(balance => balance["balance"] > 0);
+            let balanceUSD = 0;
+            let marginUSD = 0;
+            balances.forEach(balance => {
+                if (balance["currency"] === "usdt" || balance["currency"] === "usdc") {
+                    balanceUSD += balance["balance"];
+                }
+            });
+            this.m_accountInfo.m_dBalance = balanceUSD;
+            this.m_accountInfo.m_dMargin = marginUSD;
+            this.m_accountInfo.m_subBalances = balances;
+        }
         super.R_UpdatePosInfo();
     }
 

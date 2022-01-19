@@ -69,7 +69,6 @@ export class TWAPLogic extends Logic {
                 return;
             }
         });
-        super.OnOrderFinish(rOrder);
     }
 
     override AddtionalReport(): any {

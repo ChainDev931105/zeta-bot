@@ -3,6 +3,7 @@
 import { Account, Keypair, Connection, PublicKey, TokenAccountsFilter } from '@solana/web3.js';
 import { Wallet } from "@project-serum/anchor";
 import { Market, MARKETS } from '@project-serum/serum';
+import BN from 'bn.js'
 
 const PRIVATE_KEY: string = "";
 const PUBLIC_KEY: string = "BXAj15Ze7Qs7kdPXDXTT5BeXP4RDL6UCeZHd79dBepfB";
@@ -65,12 +66,13 @@ if (false) { // real
 }
 else {
     let m_connection: Connection = new Connection(URL_CONNECTION_DEMO);
-    let marketAddress: PublicKey = new PublicKey("HCGGqktRV1UXFKHoqEkdf9HqXs6Rfp7xSdwLcvHUy8KD"); // mango testnet BTC/USDC
+    let marketAddress: PublicKey = new PublicKey("5xWpt56U1NCuHoAEtpLeUrQcxDkEpNfScjfLFaRzLPgR"); // mango testnet BTC/USDC
     let programId: PublicKey = new PublicKey(PROGRAM_ADDRESS_DEMO);
     let m_owner: Account = new Account(
         new Uint8Array(JSON.parse(Buffer.from(PRIVATE_KEY).toString())));
     let m_owner_: Keypair = Keypair.fromSecretKey(new Uint8Array(JSON.parse(Buffer.from(PRIVATE_KEY).toString())));
     Market.load(m_connection, marketAddress, {}, programId).then(market => {
+        console.log(market.supportsReferralFees, market.supportsSrmFeeDiscounts);
         console.log("market is valid ", 
             market.programId.toBase58(),       // DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY
             market.publicKey.toBase58(),       // 8H7c3jxFG8gi2YBhSqBxxE8ySYHkXW1M5jUokJYQWqhj
@@ -78,17 +80,49 @@ else {
             market.baseMintAddress.toBase58(), // 3UNBZ6o52WTWwjac2kPUb4FyodhU1vFkRJheu1Sh2TvU --- devnet BTC
             market.address.toBase58()        // 8H7c3jxFG8gi2YBhSqBxxE8ySYHkXW1M5jUokJYQWqhj
         );
-        market.placeOrder(m_connection, {
-            owner: m_owner,
-            payer: new PublicKey("FxwTkPfkcb1gxgZAtLUqM92CBhNGDhMTJ8jksLUwMRa1"),
-            side: 'sell',
-            price: 140,
-            size: 0.1,
-            orderType: 'ioc'
-        }).then(rlt => {
-            console.log("order result = ", rlt);
-        }).catch(err => {
-            console.log("oops : ", err);
+        // market.placeOrder(m_connection, {
+        //     owner: m_owner,
+        //     payer: new PublicKey("8i7wdZPoSWxrJtCsWXziXq2nV5K1JNzfMi6aPXhLbT4B"),
+        //     side: 'sell',
+        //     price: 120,
+        //     size: 0.2,
+        //     orderType: 'ioc',
+        //     feeDiscountPubkey: null
+        // }).then(rlt => {
+        //     console.log("order result = ", rlt);
+        // }).catch(err => {
+        //     console.log("oops : ", err);
+        // });
+        market.loadOrdersForOwner(m_connection, m_owner.publicKey).then(rlt => {
+            console.log("loadOrdersForOwner", rlt);
+        });
+        market.loadFills(m_connection).then(fills => {
+            console.log("loadFills", fills);
+            console.log(fills.map(fill => fill.openOrders.toBase58()));
+        });
+        market.findOpenOrdersAccountsForOwner(m_connection, m_owner.publicKey).then(lstOpenOrders => {
+            console.log("findOpenOrdersAccountsForOwner", lstOpenOrders);
+            lstOpenOrders.forEach(openOrders => {
+                console.log(openOrders.address.toBase58());
+                // return;
+                if (openOrders.baseTokenFree > new BN(0) || openOrders.quoteTokenFree > new BN(0)) {
+                  // spl-token accounts to which to send the proceeds from trades
+                  let quoteTokenAccount = new PublicKey('BKn61oEvdnH5GXgAhb8bvF6W8VW79ydr4yj2zFqWeupi');
+                  let baseTokenAccount = new PublicKey('8i7wdZPoSWxrJtCsWXziXq2nV5K1JNzfMi6aPXhLbT4B');
+                  market.settleFunds(
+                    m_connection,
+                    m_owner,
+                    openOrders,
+                    baseTokenAccount,
+                    quoteTokenAccount,
+                  ).then(rlt => {
+                      console.log("settleFunds = ", rlt);
+
+                  }).catch(err => {
+
+                  });
+                }
+            })
         });
     });
 

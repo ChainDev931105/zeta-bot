@@ -1,7 +1,8 @@
 import { Account, Keypair, Connection, PublicKey } from '@solana/web3.js';
 import { Wallet } from "@project-serum/anchor";
 import { Market, MARKETS } from '@project-serum/serum';
-import { Site } from './Site'
+import BN from 'bn.js';
+import { PartOrder, Site } from './Site'
 import { UWebsocket } from '../Utils';
 import { Symbol, ORDER_COMMAND, ORDER_KIND, ROrder } from '../Global';
 
@@ -27,6 +28,7 @@ export class SerumSite extends Site {
     m_quoteTokenAccounts: Map<string, PublicKey> = new Map<string, PublicKey>(); // USDC
     m_connection: Connection | undefined;
     m_orderIDs: Map<string, Boolean> = new Map<string, Boolean>();
+    m_bLockAcc: Boolean = false;
 
     constructor() {
         super();
@@ -93,7 +95,6 @@ export class SerumSite extends Site {
                         this.m_wallet.publicKey,
                         { mint: new PublicKey(symbol.m_lstDetailInfo[1]) }
                     ).then(accounts => {
-                        console.log("accounts = ", accounts);
                         if (accounts.value.length < 1) bRlt = false;
                         else {
                             this.PutSiteLog(accounts.value.map(el => ({pubkey: el.pubkey.toBase58(), data: JSON.stringify(el.account.data)})).toString());
@@ -145,38 +146,60 @@ export class SerumSite extends Site {
         return super.R_OnTick();
     }
 
-    override R_UpdatePosInfo(): void {
-        this.m_wallet && this.m_connection?.getBalance(this.m_wallet.publicKey).then(solBalance => {
-            this.m_wallet && this.m_connection?.getParsedTokenAccountsByOwner(
+    override async R_UpdatePosInfo() {
+        if (!this.m_wallet || !this.m_connection || !this.m_owner) return;
+        if (this.m_bLockAcc) return;
+        this.m_bLockAcc = true;
+        try {
+            let solBalance: number = await this.m_connection.getBalance(this.m_wallet.publicKey);
+            let balances = await this.m_connection.getParsedTokenAccountsByOwner(
                 this.m_wallet.publicKey, 
                 {programId: new PublicKey(SPL_PROGRAM_ID)}
-            ).then(balances => {
-                let subBalances: Array<any> = balances.value.map(balance => ({
-                    token: balance.account.data.parsed.info.mint,
-                    balance: balance.account.data.parsed.info.tokenAmount.uiAmount
-                }));
-                subBalances.push({
-                    token: "SOL",
-                    balance: solBalance
-                });
-                this.m_accountInfo.m_dBalance = solBalance;
-                this.m_accountInfo.m_subBalances = subBalances;
-            }).catch(err => {
-                this.PutSiteLog("R_UpdatePosInfo2 Error" + err);
+            );
+                
+            let subBalances: Array<any> = balances.value.map(balance => ({
+                token: balance.account.data.parsed.info.mint,
+                balance: balance.account.data.parsed.info.tokenAmount.uiAmount
+            }));
+            subBalances.push({
+                token: "SOL",
+                balance: solBalance
             });
-        }).catch(err => {
-            this.PutSiteLog("R_UpdatePosInfo Error: " + err);
-        });
-        this.m_markets.forEach((market, sSymbol) => {
-            this.m_connection && market.loadFills(this.m_connection).then(fills => {
-                fills.forEach(fill => {
-                    if (this.m_orderIDs.has(fill.orderID)) {
-                        super.OnOrderUpdate(sSymbol, fill.size, fill.price);
-                        this.m_orderIDs.delete(fill.orderID);
+            this.m_accountInfo.m_dBalance = solBalance;
+            this.m_accountInfo.m_subBalances = subBalances;
+            await this.m_markets.forEach(async (market, sSymbol) => {
+                let baseTokenAccount_ = this.m_baseTokenAccounts.get(sSymbol);
+                let quoteTokenAccount_ = this.m_quoteTokenAccounts.get(sSymbol);
+                if (!this.m_wallet || !this.m_connection || !this.m_owner || !baseTokenAccount_ || !quoteTokenAccount_) return;
+                let baseTokenAccount = baseTokenAccount_;
+                let quoteTokenAccount = quoteTokenAccount_;
+                let lstOpenOrders = await market.findOpenOrdersAccountsForOwner(this.m_connection, this.m_owner.publicKey);
+
+                lstOpenOrders.forEach(async openOrders => {
+                    if (openOrders.baseTokenFree > new BN(0) || openOrders.quoteTokenFree > new BN(0)) {
+                        if (!this.m_connection || !this.m_owner) return;
+                        let dLots: number = openOrders.baseTokenFree.toNumber() + openOrders.quoteTokenFree.toNumber();
+                        this.PutSiteLog("settleFunds" + sSymbol + " " + dLots);
+                        let result = await market.settleFunds(
+                            this.m_connection,
+                            this.m_owner,
+                            openOrders,
+                            baseTokenAccount,
+                            quoteTokenAccount,
+                        );
+                        this.PutSiteLog("settleFunds result = " + result);
+                        let partOrder: PartOrder | undefined = this.m_partOrders.get(sSymbol);
+                        if (partOrder) {
+                            this.OnOrderUpdate(sSymbol, partOrder.dSignalLots, 0);
+                        }
                     }
                 });
             });
-        });
+        }
+        catch(err) {
+            this.PutSiteLog("R_UpdatePosInfo error: " + err);
+        }
+        this.m_bLockAcc = false;
         super.R_UpdatePosInfo();
     }
 
@@ -191,17 +214,21 @@ export class SerumSite extends Site {
             return false;
         }
 
-        console.log(market.publicKey.toBase58(), this.m_owner.publicKey.toBase58(), quoteTokenAccount.toBase58(), baseTokenAccount.toBase58());
-
+        let owner = this.m_owner;
         let side: 'buy' | 'sell' = (rOrder.m_eCmd === ORDER_COMMAND.Buy || rOrder.m_eCmd === ORDER_COMMAND.SellClose) ? 'buy' : 'sell';
+        let payer: PublicKey = (side === 'sell') ? baseTokenAccount : quoteTokenAccount; 
+        let size: number = rOrder.m_dSigLots;
+        let price: number =  rOrder.m_dSigPrice;
 
+        this.PutSiteLog(["placeOrder(", owner.publicKey.toBase58(), payer.toBase58(), side, price, size, ")"].join(' '));
         market.placeOrder(this.m_connection, {
-            owner: this.m_owner,
-            payer: (side === 'sell') ? quoteTokenAccount : baseTokenAccount,
-            side: side, // 'buy' or 'sell'
-            price: rOrder.m_dSigPrice,
-            size: rOrder.m_dSigLots,
-            orderType: rOrder.m_eKind === ORDER_KIND.Limit ? 'limit' : 'ioc' // 'limit', 'ioc', 'postOnly'
+            owner,
+            payer,
+            side, // 'buy' or 'sell'
+            price,
+            size,
+            orderType: rOrder.m_eKind === ORDER_KIND.Limit ? 'limit' : 'ioc', // 'limit', 'ioc', 'postOnly'
+            feeDiscountPubkey: null
         }).then(rlt => {
             this.PutSiteLog("Order Response: " + JSON.stringify(rlt));
         });
