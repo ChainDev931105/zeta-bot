@@ -14,6 +14,8 @@ const URL_CONNECTION_DEMO: string = "https://api.devnet.solana.com";
 const PROGRAM_ADDRESS_REAL: string = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin";
 const PROGRAM_ADDRESS_DEMO: string = "DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY";
 
+const SPL_PROGRAM_ID: string = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+
 const SOL_TOKEN : string = "So11111111111111111111111111111111111111112";
 
 export class SerumSite extends Site {
@@ -77,9 +79,6 @@ export class SerumSite extends Site {
                 bRlt = false;
                 return;
             }
-            this.m_connection && this.m_connection.getAccountInfo(marketAddress).then(rlt => {
-                console.log("pre result = ", rlt, rlt?.owner.toBase58());
-            });
 
             this.m_connection && Market.load(this.m_connection, marketAddress, {}, programId).then(market => {
                 this.m_markets.set(symbol.m_sSymbolName, market);
@@ -147,6 +146,27 @@ export class SerumSite extends Site {
     }
 
     override R_UpdatePosInfo(): void {
+        this.m_wallet && this.m_connection?.getBalance(this.m_wallet.publicKey).then(solBalance => {
+            this.m_wallet && this.m_connection?.getParsedTokenAccountsByOwner(
+                this.m_wallet.publicKey, 
+                {programId: new PublicKey(SPL_PROGRAM_ID)}
+            ).then(balances => {
+                let subBalances: Array<any> = balances.value.map(balance => ({
+                    token: balance.account.data.parsed.info.mint,
+                    balance: balance.account.data.parsed.info.tokenAmount.uiAmount
+                }));
+                subBalances.push({
+                    token: "SOL",
+                    balance: solBalance
+                });
+                this.m_accountInfo.m_dBalance = solBalance;
+                this.m_accountInfo.m_subBalances = subBalances;
+            }).catch(err => {
+                this.PutSiteLog("R_UpdatePosInfo2 Error" + err);
+            });
+        }).catch(err => {
+            this.PutSiteLog("R_UpdatePosInfo Error: " + err);
+        });
         this.m_markets.forEach((market, sSymbol) => {
             this.m_connection && market.loadFills(this.m_connection).then(fills => {
                 fills.forEach(fill => {
@@ -162,22 +182,26 @@ export class SerumSite extends Site {
 
     override R_OrderSend(rOrder: ROrder): Boolean {
         if (!super.R_OrderSend(rOrder)) return false;
-
         let market: Market | undefined = this.m_markets.get(rOrder.m_symbol.m_sSymbolName);
-        let payer: PublicKey | undefined = this.m_baseTokenAccounts.get(rOrder.m_symbol.m_sSymbolName);
-
-        if (!this.m_owner || !this.m_connection || !market || !payer) {
+        let quoteTokenAccount: PublicKey | undefined = this.m_quoteTokenAccounts.get(rOrder.m_symbol.m_sSymbolName);
+        let baseTokenAccount: PublicKey | undefined = this.m_baseTokenAccounts.get(rOrder.m_symbol.m_sSymbolName);
+        
+        if (!this.m_owner || !this.m_connection || !market || !quoteTokenAccount || !baseTokenAccount) {
             this.PutSiteLog("undefined object");
             return false;
         }
 
+        console.log(market.publicKey.toBase58(), this.m_owner.publicKey.toBase58(), quoteTokenAccount.toBase58(), baseTokenAccount.toBase58());
+
+        let side: 'buy' | 'sell' = (rOrder.m_eCmd === ORDER_COMMAND.Buy || rOrder.m_eCmd === ORDER_COMMAND.SellClose) ? 'buy' : 'sell';
+
         market.placeOrder(this.m_connection, {
             owner: this.m_owner,
-            payer,
-            side: (rOrder.m_eCmd === ORDER_COMMAND.Buy || rOrder.m_eCmd === ORDER_COMMAND.SellClose) ? 'buy' : 'sell', // 'buy' or 'sell'
+            payer: (side === 'sell') ? quoteTokenAccount : baseTokenAccount,
+            side: side, // 'buy' or 'sell'
             price: rOrder.m_dSigPrice,
             size: rOrder.m_dSigLots,
-            orderType: rOrder.m_eKind === ORDER_KIND.Limit ? 'limit' : 'ioc', // 'limit', 'ioc', 'postOnly'
+            orderType: rOrder.m_eKind === ORDER_KIND.Limit ? 'limit' : 'ioc' // 'limit', 'ioc', 'postOnly'
         }).then(rlt => {
             this.PutSiteLog("Order Response: " + JSON.stringify(rlt));
         });
