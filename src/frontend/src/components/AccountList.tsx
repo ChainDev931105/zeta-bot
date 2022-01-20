@@ -44,10 +44,20 @@ export const AccountList = ({ clients }: Props) => {
                         <td>{account.data.accountInfo.m_dBalance | 0}</td>
                         <td>{account.data.accountInfo.m_dEquity | 0}</td>
                         <td>{account.data.accountInfo.m_dMargin | 0}</td>
-                        <td>{JSON.stringify(account.data.accountInfo.m_subBalances)}</td>
+                        <td>
+                            <table>
+                                {account.data.accountInfo.m_subBalances.map((subBalance: any) => (
+                                    <tr>
+                                        <td>{subBalance.token}</td>
+                                        <td>{subBalance.balance}</td>
+                                    </tr>
+                                ))}
+                            </table>
+                        </td>
                     </tr>
                 ))}
             </table>
         </div>
     )
 }
+//account.data.accountInfo.m_subBalances

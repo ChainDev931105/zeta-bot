@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.3] 2021-01-20
+- Update SubAcccount report format
+- (project is stopped for a while)
+
 ## [0.3.2] 2021-01-17
 - Update SerumSite Demo mode (Order part, Account info)
 - Update *server* Config Manager, as symbol detail information config

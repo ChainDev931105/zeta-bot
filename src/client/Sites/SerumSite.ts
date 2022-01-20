@@ -151,12 +151,12 @@ export class SerumSite extends Site {
         if (this.m_bLockAcc) return;
         this.m_bLockAcc = true;
         try {
-            let solBalance: number = await this.m_connection.getBalance(this.m_wallet.publicKey);
+            let solBalance: number = await this.m_connection.getBalance(this.m_wallet.publicKey) / 1e9;
             let balances = await this.m_connection.getParsedTokenAccountsByOwner(
                 this.m_wallet.publicKey, 
                 {programId: new PublicKey(SPL_PROGRAM_ID)}
             );
-                
+            
             let subBalances: Array<any> = balances.value.map(balance => ({
                 token: balance.account.data.parsed.info.mint,
                 balance: balance.account.data.parsed.info.tokenAmount.uiAmount
@@ -208,25 +208,21 @@ export class SerumSite extends Site {
         let market: Market | undefined = this.m_markets.get(rOrder.m_symbol.m_sSymbolName);
         let quoteTokenAccount: PublicKey | undefined = this.m_quoteTokenAccounts.get(rOrder.m_symbol.m_sSymbolName);
         let baseTokenAccount: PublicKey | undefined = this.m_baseTokenAccounts.get(rOrder.m_symbol.m_sSymbolName);
-        
+
         if (!this.m_owner || !this.m_connection || !market || !quoteTokenAccount || !baseTokenAccount) {
             this.PutSiteLog("undefined object");
             return false;
         }
 
-        let owner = this.m_owner;
         let side: 'buy' | 'sell' = (rOrder.m_eCmd === ORDER_COMMAND.Buy || rOrder.m_eCmd === ORDER_COMMAND.SellClose) ? 'buy' : 'sell';
-        let payer: PublicKey = (side === 'sell') ? baseTokenAccount : quoteTokenAccount; 
-        let size: number = rOrder.m_dSigLots;
-        let price: number =  rOrder.m_dSigPrice;
-
-        this.PutSiteLog(["placeOrder(", owner.publicKey.toBase58(), payer.toBase58(), side, price, size, ")"].join(' '));
+        let payer: PublicKey = (side === 'sell') ? baseTokenAccount : quoteTokenAccount;
+        
         market.placeOrder(this.m_connection, {
-            owner,
+            owner: this.m_owner,
             payer,
             side, // 'buy' or 'sell'
-            price,
-            size,
+            price: rOrder.m_dSigPrice,
+            size: rOrder.m_dSigLots,
             orderType: rOrder.m_eKind === ORDER_KIND.Limit ? 'limit' : 'ioc', // 'limit', 'ioc', 'postOnly'
             feeDiscountPubkey: null
         }).then(rlt => {
@@ -240,20 +236,8 @@ export class SerumSite extends Site {
     }
 
     private getMarketAddress(symbol: Symbol): PublicKey | undefined {
-        if (false && this.isReal()) {
-            let programId = new PublicKey(PROGRAM_ADDRESS_REAL);
-            let marketInfo = MARKETS.find(market => (
-                market.name === symbol.m_sSymbolName && market.programId.toBase58() === programId.toBase58()
-            ));
-            if (marketInfo === undefined) {
-                return undefined;
-            }
-            return marketInfo?.address;
-        }
-        else {
-            if (symbol.m_lstDetailInfo.length < 1) return undefined;
-            return new PublicKey(symbol.m_lstDetailInfo[0]);
-        }
+        if (symbol.m_lstDetailInfo.length < 1) return undefined;
+        return new PublicKey(symbol.m_lstDetailInfo[0]);
     }
 
     onWSReceive: ((jMsg: any) => void) = (jMsg: any) => {
