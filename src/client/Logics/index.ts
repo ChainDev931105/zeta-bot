@@ -1,6 +1,7 @@
 import { LogicConfig } from "../../common/config";
 import { Logic } from "./Logic";
 import { ArbitrageLogic } from "./ArbitrageLogic";
+import { MarketMakerLogic } from "./MarketMakerLogic";
 import { TWAPLogic } from "./TWAPLogic";
 
 
@@ -11,6 +12,9 @@ export const CreateLogic: ((logicConfig: LogicConfig) => Logic) = (logicConfig: 
   }
   else if (logicConfig.logic_type === "TWAPLogic") {
     logic = new TWAPLogic();
+  }
+  else if (logicConfig.logic_type === "MarketMakerLogic") {
+    logic = new MarketMakerLogic();
   }
   else {
     logic = new Logic();
