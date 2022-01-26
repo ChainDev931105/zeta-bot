@@ -1,13 +1,13 @@
 
 
 type Props = {
-    clients: Array<string>
+  clients: Array<string>
 };
 
 export const SystemList = ({ clients }: Props) => {
-    return (
-        <div>
+  return (
+    <div>
 
-        </div>
-    )
+    </div>
+  )
 }

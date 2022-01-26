@@ -5,9 +5,9 @@ import { Setting } from "./Setting";
 import { TradeManager } from "./TradeManager";
 
 export {
-    AccountManager,
-    LogicManager,
-    OrderManager,
-    Setting,
-    TradeManager
+  AccountManager,
+  LogicManager,
+  OrderManager,
+  Setting,
+  TradeManager
 };
