@@ -33,7 +33,7 @@ export class HuobiSite extends Site {
       );
   }
 
-  override R_Init(): Boolean {
+  override async R_Init(): Promise<Boolean> {
     return super.R_Init();
   }
 

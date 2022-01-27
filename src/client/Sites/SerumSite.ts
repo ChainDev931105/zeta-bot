@@ -34,7 +34,7 @@ export class SerumSite extends Site {
     super();
   }
 
-  override R_Init(): Boolean {
+  override async R_Init(): Promise<Boolean> {
     this.m_websocket = new UWebsocket(
       this.isReal() ? WS_URL_REAL : WS_URL_DEMO,
       null,

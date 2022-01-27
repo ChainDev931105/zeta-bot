@@ -21,7 +21,7 @@ export class Site {
 
   }
 
-  R_Init(): Boolean {
+  async R_Init(): Promise<Boolean> {
     this.m_symbols.clear();
     this.m_siteConfig.symbols.forEach(symbol => {
       let sym: Symbol = new Symbol(this, symbol[0]);
@@ -29,7 +29,7 @@ export class Site {
       this.m_symbols.set(symbol[0], sym);
     });
     this.m_partOrders.clear();
-    return true;
+    return new Promise(resolve => resolve(true));
   }
 
   R_Login(): Boolean {
