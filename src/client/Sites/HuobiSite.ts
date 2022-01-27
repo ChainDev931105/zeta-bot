@@ -37,7 +37,7 @@ export class HuobiSite extends Site {
     return super.R_Init();
   }
 
-  override R_Login(): Boolean {
+  override async R_Login(): Promise<Boolean> {
     this.m_websocketRate.Open();
     this.m_symbols.forEach(symbol => {
       this.m_websocketRate.SendJson({

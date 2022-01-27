@@ -29,10 +29,10 @@ export class Site {
       this.m_symbols.set(symbol[0], sym);
     });
     this.m_partOrders.clear();
-    return new Promise(resolve => resolve(true));
+    return true;
   }
 
-  R_Login(): Boolean {
+  async R_Login(): Promise<Boolean> {
     return true;
   }
 

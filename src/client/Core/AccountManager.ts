@@ -49,6 +49,7 @@ export class AccountManager {
       if (bRlt && !site.R_OnTick()) bRlt = false;
     });
     if (!bRlt) return false;
+    
     if (!this.checkRates()) return false;
 
     if (this.g_timerAccountReport.Check()) {

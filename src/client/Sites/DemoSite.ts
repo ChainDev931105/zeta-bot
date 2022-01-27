@@ -8,7 +8,7 @@ export class DemoSite extends Site {
     super();
   }
 
-  override R_Login(): Boolean {
+  override async R_Login(): Promise<Boolean> {
     this.m_TimerRate = setInterval(() => {
       this.m_symbols.forEach(symbol => {
         let dAsk = (symbol.Ask() === 0) ? ((Math.random() + 1) * (Math.random() + 1) * (Math.random() + 1) * 1000) : symbol.Ask();

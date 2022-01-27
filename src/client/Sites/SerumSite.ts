@@ -45,7 +45,7 @@ export class SerumSite extends Site {
     return super.R_Init();
   }
 
-  override R_Login(): Boolean {
+  override async R_Login(): Promise<Boolean> {
     let privateKey: Keypair = Keypair.fromSecretKey(
       new Uint8Array(JSON.parse(Buffer.from(this.m_siteConfig.password).toString()))
     );

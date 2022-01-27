@@ -1,8 +1,9 @@
-import { Client, Exchange, Network, utils, types } from "@zetamarkets/sdk";
+import { Client, Exchange, Network, utils, types, Market } from "@zetamarkets/sdk";
 import { PublicKey, Connection, Keypair } from "@solana/web3.js";
 import { Wallet } from "@project-serum/anchor";
 import { Site } from './Site'
 import { Symbol, ROrder, ORDER_KIND, ORDER_COMMAND } from "../Global";
+import { UTimer } from "../Utils";
 
 const PROGRAM_ID_REAL: string = "ZETAxsqBRek56DhiGXrn75yj2NHU3aYUnxvHXpkf3aD";
 const PROGRAM_ID_DEMO: string = "BG3oRikW8d16YjUEmX3ZxHm9SiJzrGtMhsSR8aCw1Cd7";
@@ -13,6 +14,8 @@ export class ZetaFutureSite extends Site {
   private m_wallet: Wallet | undefined;
   private m_client: Client | undefined;
   private m_bRealMode: Boolean = false;
+  private m_timerOnTick: UTimer = new UTimer(1000);
+  m_zfSymbols: Map<string, ZFSymbol> = new Map<string, ZFSymbol>();
 
   constructor() {
     super();
@@ -20,13 +23,19 @@ export class ZetaFutureSite extends Site {
 
   override async R_Init(): Promise<Boolean> {
     this.m_bRealMode = this.m_siteConfig.property.toLowerCase().includes("real");
+    //this.m_bRealMode = true;
+
+    return super.R_Init();
+  }
+
+  override async R_Login(): Promise<Boolean> {
     const connection = new Connection(this.m_bRealMode ? NET_URL_REAL : NET_URL_DEMO, {
       commitment: "confirmed",
       disableRetryOnRateLimit: true,
     });
 
     const userKey = Keypair.fromSecretKey(
-      new Uint8Array(JSON.parse(Buffer.from(process.env.PRIVATE_KEY!).toString()))
+      new Uint8Array(JSON.parse(Buffer.from(this.m_siteConfig.password).toString()))
     );
     this.m_wallet = new Wallet(userKey);
     
@@ -38,13 +47,19 @@ export class ZetaFutureSite extends Site {
       this.m_wallet,
       0
     );
-    //this.PutSiteLog("Exchange loaded");
+    this.PutSiteLog("Exchange loaded");
   
-    //this.client = await Client.load(connection, this.m_wallet, utils.commitmentConfig("confirmed"), this.onClientEvent);
-    return super.R_Init();
-  }
-
-  override R_Login(): Boolean {
+    this.m_client = await Client.load(connection, this.m_wallet, utils.commitmentConfig("confirmed"), this.onClientEvent);
+    
+    let futureMarkets = Exchange.markets.markets.filter(x => (x.kind === types.Kind.FUTURE));
+    let bSuccess = true;
+    this.m_siteConfig.symbols.forEach(symbol => {
+      const marketId: number = parseInt(symbol[1]);
+      let market: Market | undefined = futureMarkets.find(_market => _market.marketIndex === marketId);
+      if (market === undefined) bSuccess = false;
+      else this.m_zfSymbols.set(symbol[0], new ZFSymbol(market));
+    });
+    if (!bSuccess) return false;
 
     return super.R_Login();
   }
@@ -54,6 +69,35 @@ export class ZetaFutureSite extends Site {
   }
 
   override R_OnTick(): Boolean {
+    if (this.m_client && this.m_timerOnTick.Check()) {
+      let client: Client = this.m_client;
+      client.updateState();
+      this.m_zfSymbols.forEach((zfSymbol, sSymbol) => {
+        let marketIndex = zfSymbol.market.marketIndex;
+        let marketPublicKey = Exchange.markets.markets[marketIndex].address;
+  
+        if (!Exchange.markets.markets[marketIndex].expirySeries.isLive()) {
+          return;
+        }
+        try {
+          console.log(zfSymbol.market.orderbook);
+        }
+        catch(err) {}
+        let bids: types.Order[] = client.orders.filter((order) => 
+          (marketIndex === order.marketIndex && order.side === types.Side.BID)
+        );
+        zfSymbol.setBids(bids);
+
+        let asks: types.Order[] = client.orders.filter((order) => 
+          (marketIndex === order.marketIndex && order.side === types.Side.ASK)
+        );
+        zfSymbol.setAsks(asks);
+        
+        // if (asks.length > 0 || bids.length > 0) console.log({asks, bids});
+        //console.log(sSymbol, zfSymbol.ask(), zfSymbol.bid());
+        super.OnRateUpdate(sSymbol, zfSymbol.ask(), zfSymbol.bid(), 1, 1);
+      });
+    }
     return super.R_OnTick();
   }
 
@@ -66,5 +110,35 @@ export class ZetaFutureSite extends Site {
     if (!super.R_OrderSend(rOrder)) return false;
     
     return true;
+  }
+
+  private onClientEvent = async (eventType: any, data: any) => {
+    console.log("[event]" + eventType + " " + new Date().toISOString());
+  }
+}
+
+export class ZFSymbol {
+  market: Market;
+  asks: Array<types.Order> = [];
+  bids: Array<types.Order> = [];
+
+  constructor(market: Market) {
+    this.market = market;
+  }
+
+  setAsks(asks: types.Order[]): void {
+    this.asks = asks;
+  }
+
+  setBids(bids: types.Order[]): void {
+    this.bids = bids;
+  }
+
+  ask(): number {
+    return this.asks.length > 0 ? this.asks[0].price : 0;
+  }
+
+  bid(): number {
+    return this.bids.length > 0 ? this.bids[0].price : 0;
   }
 }
