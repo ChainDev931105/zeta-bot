@@ -1,4 +1,4 @@
-import { Client, Exchange, Network, utils, types, Market } from "@zetamarkets/sdk";
+import { Client, Exchange, Network, utils, types, Market, OraclePrice } from "@zetamarkets/sdk";
 import { PublicKey, Connection, Keypair } from "@solana/web3.js";
 import { Wallet } from "@project-serum/anchor";
 import { Site } from './Site'
@@ -9,13 +9,16 @@ const PROGRAM_ID_REAL: string = "ZETAxsqBRek56DhiGXrn75yj2NHU3aYUnxvHXpkf3aD";
 const PROGRAM_ID_DEMO: string = "BG3oRikW8d16YjUEmX3ZxHm9SiJzrGtMhsSR8aCw1Cd7";
 const NET_URL_REAL: string = "https://solana-api.projectserum.com/";
 const NET_URL_DEMO: string = "https://api.devnet.solana.com/";
+const TICKSIZE: number = 100;
 
 export class ZetaFutureSite extends Site {
   private m_wallet: Wallet | undefined;
   private m_client: Client | undefined;
   private m_bRealMode: Boolean = false;
   private m_timerOnTick: UTimer = new UTimer(1000);
+  private m_marketPublicKey: PublicKey = PublicKey.default;
   m_zfSymbols: Map<string, ZFSymbol> = new Map<string, ZFSymbol>();
+  m_nProcessCnt: number = 0;
 
   constructor() {
     super();
@@ -57,7 +60,7 @@ export class ZetaFutureSite extends Site {
       const marketId: number = parseInt(symbol[1]);
       let market: Market | undefined = futureMarkets.find(_market => _market.marketIndex === marketId);
       if (market === undefined) bSuccess = false;
-      else this.m_zfSymbols.set(symbol[0], new ZFSymbol(market));
+      else this.m_zfSymbols.set(symbol[0], new ZFSymbol(market, symbol[2]));
     });
     if (!bSuccess) return false;
 
@@ -74,27 +77,31 @@ export class ZetaFutureSite extends Site {
       client.updateState();
       this.m_zfSymbols.forEach((zfSymbol, sSymbol) => {
         let marketIndex = zfSymbol.market.marketIndex;
-        let marketPublicKey = Exchange.markets.markets[marketIndex].address;
+        this.m_marketPublicKey = Exchange.markets.markets[marketIndex].address;
   
         if (!Exchange.markets.markets[marketIndex].expirySeries.isLive()) {
+          console.log("it is not live");
           return;
         }
-        try {
-          console.log(zfSymbol.market.orderbook);
-        }
-        catch(err) {}
-        let bids: types.Order[] = client.orders.filter((order) => 
-          (marketIndex === order.marketIndex && order.side === types.Side.BID)
-        );
+        zfSymbol.market.updateOrderbook();
+        let asks = zfSymbol.market.orderbook.asks.sort((x, y) => (x.price - y.price));
+        let bids = zfSymbol.market.orderbook.bids.sort((x, y) => (y.price - x.price));
+        zfSymbol.setAsks(asks);
         zfSymbol.setBids(bids);
 
-        let asks: types.Order[] = client.orders.filter((order) => 
+        let myBids: types.Order[] = client.orders.filter((order) => 
+          (marketIndex === order.marketIndex && order.side === types.Side.BID)
+        );
+        zfSymbol.setMyBids(myBids);
+
+        let myAsks: types.Order[] = client.orders.filter((order) => 
           (marketIndex === order.marketIndex && order.side === types.Side.ASK)
         );
-        zfSymbol.setAsks(asks);
+        zfSymbol.setMyAsks(myAsks);
+
+        let basePrice: OraclePrice = Exchange.oracle.getPrice(zfSymbol.sBaseSymbol);
+        if (basePrice) zfSymbol.setTheoPrice(basePrice.price);
         
-        // if (asks.length > 0 || bids.length > 0) console.log({asks, bids});
-        //console.log(sSymbol, zfSymbol.ask(), zfSymbol.bid());
         super.OnRateUpdate(sSymbol, zfSymbol.ask(), zfSymbol.bid(), 1, 1);
       });
     }
@@ -108,30 +115,94 @@ export class ZetaFutureSite extends Site {
 
   override R_OrderSend(rOrder: ROrder): Boolean {
     if (!super.R_OrderSend(rOrder)) return false;
-    
     return true;
   }
 
   private onClientEvent = async (eventType: any, data: any) => {
     console.log("[event]" + eventType + " " + new Date().toISOString());
   }
+
+  sendOrders = (lstOrderReq: Array<OrderReq>) => {
+    this.m_nProcessCnt += lstOrderReq.length;
+    Promise.all(lstOrderReq.map(async orderReq => {
+      if (orderReq.type === "cancel") {
+        await this.m_client?.cancelOrder(
+          this.m_marketPublicKey,
+          orderReq.order.orderId,
+          orderReq.order.side
+        ).then(rlt => {
+          this.PutSiteLog("order response: " + rlt);
+          if (this.m_nProcessCnt > 0) this.m_nProcessCnt--;
+        }).catch(err => {
+          if (this.m_nProcessCnt > 0) this.m_nProcessCnt--;
+        });
+      }
+      else if (orderReq.type === "place") {
+        await this.m_client?.placeOrder(
+          this.m_marketPublicKey,
+          Math.floor(utils.convertDecimalToNativeInteger(orderReq.price) / TICKSIZE) * TICKSIZE,
+          utils.convertDecimalToNativeLotSize(orderReq.size),
+          orderReq.side
+        ).then(rlt => {
+          this.PutSiteLog("order response: " + rlt);
+          if (this.m_nProcessCnt > 0) this.m_nProcessCnt--;
+        }).catch(err => {
+          if (this.m_nProcessCnt > 0) this.m_nProcessCnt--;
+        });
+      }
+      else if (orderReq.type === "cancelAndPlace") {
+        await this.m_client?.cancelAndPlaceOrder(
+          this.m_marketPublicKey,
+          orderReq.order.orderId,
+          orderReq.order.side,
+          Math.floor(utils.convertDecimalToNativeInteger(orderReq.price) / TICKSIZE) * TICKSIZE,
+          utils.convertDecimalToNativeLotSize(orderReq.size),
+          orderReq.side
+        ).then(rlt => {
+          this.PutSiteLog("order response: " + rlt);
+          if (this.m_nProcessCnt > 0) this.m_nProcessCnt--;
+        }).catch(err => {
+          if (this.m_nProcessCnt > 0) this.m_nProcessCnt--;
+        });
+      }
+    }));
+  }
 }
 
 export class ZFSymbol {
   market: Market;
-  asks: Array<types.Order> = [];
-  bids: Array<types.Order> = [];
+  sBaseSymbol: string;
+  asks: Array<types.Level> = [];
+  bids: Array<types.Level> = [];
+  myAsks: Array<types.Order> = [];
+  myBids: Array<types.Order> = [];
+  theoPrice: number = 0;
+  expireTS: number;
 
-  constructor(market: Market) {
+  constructor(market: Market, sBaseSymbol: string) {
     this.market = market;
+    this.sBaseSymbol = sBaseSymbol;
+    this.expireTS = market.expirySeries.expiryTs;
   }
 
-  setAsks(asks: types.Order[]): void {
+  setTheoPrice(theoPrice: number) {
+    this.theoPrice = theoPrice;
+  }
+
+  setAsks(asks: types.Level[]): void {
     this.asks = asks;
   }
 
-  setBids(bids: types.Order[]): void {
+  setBids(bids: types.Level[]): void {
     this.bids = bids;
+  }
+
+  setMyAsks(myAsks: types.Order[]): void {
+    this.myAsks = myAsks;
+  }
+
+  setMyBids(myBids: types.Order[]): void {
+    this.myBids = myBids;
   }
 
   ask(): number {
@@ -141,4 +212,12 @@ export class ZFSymbol {
   bid(): number {
     return this.bids.length > 0 ? this.bids[0].price : 0;
   }
+}
+
+export interface OrderReq {
+  type: "cancel" | "place" | "cancelAndPlace",
+  order: types.Order,
+  price: number;
+  size: number;
+  side: types.Side;
 }

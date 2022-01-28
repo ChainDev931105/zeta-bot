@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.4.0] 2021-01-28
+- Zeta Future Site
+- Market Maker Logic
+
 ## [0.3.3] 2021-01-20
 - Update SubAcccount report format
 - (project is stopped for a while)

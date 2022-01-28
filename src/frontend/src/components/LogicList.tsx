@@ -12,7 +12,8 @@ type LogicReport = {
   data: {
     params: any,
     products: Array<Array<string>>,
-    logic_type: string
+    logic_type: string,
+    additional_report: any
   }
 };
 
@@ -99,6 +100,7 @@ export const LogicList = ({ clients }: Props) => {
           <td>LogicID</td>
           <td>LogicType</td>
           <td></td>
+          <td></td>
         </tr>
         {logics && logics.map(logic => (
           <tr key={logic.key}>
@@ -114,6 +116,9 @@ export const LogicList = ({ clients }: Props) => {
                 setActiveLogic({...logic});
                 setParamModalOpen(true);
               }}>Parameters</button>
+            </td>
+            <td>
+              {JSON.stringify(logic.data.additional_report)}
             </td>
           </tr>
         ))}

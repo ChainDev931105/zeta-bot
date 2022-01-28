@@ -26,3 +26,7 @@ export function DateToStr(dt: Date, sFormat: string): string {
   });
   return sRlt;
 };
+
+export function round(x: number, n: number): number {
+  return Math.round(x * Math.pow(10, n)) / Math.pow(10, n);
+}

@@ -11,6 +11,7 @@ export class Rate {
   dBidVolume: number = 0;
 
   IsValidRate(): Boolean {
+    return true; // TODO: remove this line in real mode
     if (this.dAsk < EP || this.dBid < EP) return false;
     if (this.dAsk < this.dBid) return false;
     if (this.dAsk - this.dBid > (this.dAsk + this.dBid) * 0.1) return false;

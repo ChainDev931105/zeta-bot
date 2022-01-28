@@ -4,7 +4,7 @@ export class UTimer {
   m_nPeriodMS: number;
   m_dtLast: Date;
 
-  constructor(nPeriodMS: number, bStartNow: Boolean = true) {
+  constructor(nPeriodMS: number = 10000000, bStartNow: Boolean = true) {
     this.m_nPeriodMS = nPeriodMS;
     this.m_dtLast = bStartNow ? new Date() : ZERO_TIME;
   }
